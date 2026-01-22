@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Receiver main layout: Full-screen video with minimal overlay -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Video display surface - FULL SCREEN, NO background (background blocks video!) -->
+    <SurfaceView
+        android:id="@+id/surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Semi-transparent overlay for status info (won't affect SurfaceView) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:background="#88000000"
+        android:padding="8dp">
+
+        <!-- Status indicator -->
+        <TextView
+            android:id="@+id/status_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Waiting for connection..."
+            android:textSize="12sp"
+            android:textColor="#FFFFFF" />
+
+        <!-- Compact log output - fixed height, won't cause layout changes -->
+        <TextView
+            android:id="@+id/log_view"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:text="Initializing receiver...\n"
+            android:fontFamily="monospace"
+            android:textSize="9sp"
+            android:textColor="#CCCCCC"
+            android:maxLines="5"
+            android:scrollbars="vertical"
+            android:ellipsize="start"
+            android:gravity="bottom"
+            android:paddingTop="4dp" />
+    </LinearLayout>
+
+</FrameLayout>
