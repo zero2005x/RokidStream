@@ -54,10 +54,12 @@ The project uses BLE GATT for connection setup and L2CAP channels for high-bandw
 ## Requirements
 
 ### Hardware
+
 - **Sender Device**: Android phone with Bluetooth 5.0+ and Camera
 - **Receiver Device**: Android device with Bluetooth 5.0+ (e.g., Rokid glasses)
 
 ### Software
+
 - Android SDK 29+ (Android 10)
 - Target SDK 34 (Android 14)
 - Kotlin 1.9.0
@@ -96,14 +98,16 @@ RokidStream/
 ### Building from Source
 
 1. Clone the repository:
+
    ```bash
-   git clone https://github.com/yourusername/RokidStream.git
+   git clone https://github.com/zero2005x/RokidStream.git
    cd RokidStream
    ```
 
 2. Open the project in Android Studio.
 
 3. Build and install the Sender app on your phone:
+
    ```bash
    ./gradlew :sender:installDebug
    ```
@@ -115,7 +119,7 @@ RokidStream/
 
 ### Pre-built APKs
 
-Download the latest APKs from the [Releases](https://github.com/yourusername/RokidStream/releases) page.
+Download the latest APKs from the [Releases](https://github.com/zero2005x/RokidStream/releases) page.
 
 ## Usage
 
@@ -143,19 +147,19 @@ Download the latest APKs from the [Releases](https://github.com/yourusername/Rok
 
 ### Video Parameters (Sender)
 
-| Parameter | Value | Location |
-|-----------|-------|----------|
-| Resolution | 720x720 | `VIDEO_WIDTH`, `VIDEO_HEIGHT` |
-| Bitrate | 300 Kbps | `VIDEO_BITRATE` |
-| Frame Rate | 10 FPS | `VIDEO_FRAME_RATE` |
-| I-Frame Interval | 1 second | `VIDEO_I_FRAME_INTERVAL` |
-| Encoder Profile | Baseline | `AVCProfileBaseline` |
+| Parameter        | Value    | Location                      |
+| ---------------- | -------- | ----------------------------- |
+| Resolution       | 720x720  | `VIDEO_WIDTH`, `VIDEO_HEIGHT` |
+| Bitrate          | 300 Kbps | `VIDEO_BITRATE`               |
+| Frame Rate       | 10 FPS   | `VIDEO_FRAME_RATE`            |
+| I-Frame Interval | 1 second | `VIDEO_I_FRAME_INTERVAL`      |
+| Encoder Profile  | Baseline | `AVCProfileBaseline`          |
 
 ### BLE UUIDs
 
-| UUID | Purpose |
-|------|---------|
-| `6e400001-b5a3-f393-e0a9-e50e24dcca9e` | Service UUID |
+| UUID                                   | Purpose            |
+| -------------------------------------- | ------------------ |
+| `6e400001-b5a3-f393-e0a9-e50e24dcca9e` | Service UUID       |
 | `6e400002-b5a3-f393-e0a9-e50e24dcca9e` | PSM Characteristic |
 
 ## Protocol
@@ -183,6 +187,7 @@ Each video frame is transmitted with a simple length-prefix protocol:
 ## Permissions
 
 ### Sender App
+
 - `BLUETOOTH_SCAN` - Scan for BLE devices
 - `BLUETOOTH_CONNECT` - Connect to BLE devices
 - `ACCESS_FINE_LOCATION` - Required for BLE scanning
@@ -190,6 +195,7 @@ Each video frame is transmitted with a simple length-prefix protocol:
 - `FOREGROUND_SERVICE` - Background streaming (optional)
 
 ### Receiver App
+
 - `BLUETOOTH_ADVERTISE` - Advertise BLE service
 - `BLUETOOTH_CONNECT` - Accept BLE connections
 
@@ -198,21 +204,25 @@ Each video frame is transmitted with a simple length-prefix protocol:
 ### Common Issues
 
 **"Scan Failed" Error**
+
 - Ensure Bluetooth is enabled
 - Grant location permission
 - Restart Bluetooth adapter
 
 **"L2CAP Connection Failed"**
+
 - Ensure receiver is advertising
 - Check if PSM value is valid
 - Try restarting both apps
 
 **Black Screen on Receiver**
+
 - Wait for keyframe (I-frame)
 - Check codec config (SPS/PPS) transmission
 - Verify decoder initialization
 
 **Low Frame Rate**
+
 - Normal due to BLE bandwidth limits
 - Consider reducing resolution
 - Check for interference
@@ -220,20 +230,21 @@ Each video frame is transmitted with a simple length-prefix protocol:
 ### Debugging
 
 Both apps log extensively to Logcat:
+
 ```bash
 adb logcat -s RokidSender:D RokidReceiver:D
 ```
 
 ## Dependencies
 
-| Library | Version | Purpose |
-|---------|---------|---------|
-| AndroidX Core KTX | 1.12.0 | Kotlin extensions |
-| AndroidX AppCompat | 1.6.1 | UI compatibility |
-| Material | 1.11.0 | Material Design |
-| Lifecycle Runtime KTX | 2.7.0 | Lifecycle awareness |
-| LZ4 Java | 1.8.0 | Compression (optional) |
-| CameraX | 1.3.0 | Camera API (Sender) |
+| Library               | Version | Purpose                |
+| --------------------- | ------- | ---------------------- |
+| AndroidX Core KTX     | 1.12.0  | Kotlin extensions      |
+| AndroidX AppCompat    | 1.6.1   | UI compatibility       |
+| Material              | 1.11.0  | Material Design        |
+| Lifecycle Runtime KTX | 2.7.0   | Lifecycle awareness    |
+| LZ4 Java              | 1.8.0   | Compression (optional) |
+| CameraX               | 1.3.0   | Camera API (Sender)    |
 
 ## Known Limitations
 
