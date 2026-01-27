@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RokidStream</string>
+    
+    <!-- Navigation -->
+    <string name="nav_streaming">Transmisión</string>
+    <string name="nav_settings">Configuración</string>
+    
+    <!-- Stream Direction -->
+    <string name="direction_phone_to_glasses">Teléfono → Gafas</string>
+    <string name="direction_glasses_to_phone">Gafas → Teléfono</string>
+    <string name="direction_bidirectional">Bidireccional</string>
+    
+    <!-- Connection Mode -->
+    <string name="mode_l2cap">BLE L2CAP</string>
+    <string name="mode_l2cap_desc">Bluetooth de baja latencia</string>
+    <string name="mode_wifi">WiFi TCP</string>
+    <string name="mode_wifi_desc">WiFi de alto ancho de banda</string>
+    <string name="mode_rokid_sdk">Rokid SDK</string>
+    <string name="mode_rokid_sdk_desc">Protocolo ARTC oficial</string>
+    
+    <!-- Connection Status -->
+    <string name="status_offline">Desconectado</string>
+    <string name="status_connecting">Conectando…</string>
+    <string name="status_connected">Conectado</string>
+    <string name="status_streaming">Transmitiendo</string>
+    
+    <!-- Server Status (Glasses) -->
+    <string name="status_stopped">Detenido</string>
+    <string name="status_starting">Iniciando…</string>
+    <string name="status_waiting">Esperando</string>
+    
+    <!-- UI Labels -->
+    <string name="title_video_preview">Vista previa de video</string>
+    <string name="title_stream_direction">Dirección del flujo</string>
+    <string name="title_connection_mode">Modo de conexión</string>
+    <string name="title_logs">Registros</string>
+    <string name="title_connected_device">Dispositivo conectado</string>
+    <string name="title_unknown_device">Dispositivo desconocido</string>
+    <string name="label_send">Enviar →</string>
+    <string name="label_receive">← Recibir</string>
+    <string name="label_send_glasses">Enviar → (Gafas)</string>
+    <string name="label_receive_phone">← Recibir (Teléfono)</string>
+    
+    <!-- Buttons -->
+    <string name="btn_stop_streaming">Detener transmisión</string>
+    <string name="btn_connecting">Conectando…</string>
+    <string name="btn_connect_stream">Conectar y transmitir (%s)</string>
+    <string name="btn_stop_service">Detener servicio</string>
+    <string name="btn_starting">Iniciando…</string>
+    <string name="btn_start_service">Iniciar servicio (%s)</string>
+    
+    <!-- Log Messages -->
+    <string name="log_connection_status">Estado de conexión: %s</string>
+    <string name="log_disconnect_first_direction">⚠️ Por favor desconéctese antes de cambiar la dirección del flujo</string>
+    <string name="log_disconnect_first_mode">⚠️ Por favor desconéctese antes de cambiar el modo de conexión</string>
+    <string name="log_stop_first_direction">⚠️ Por favor detenga el servicio antes de cambiar la dirección del flujo</string>
+    <string name="log_stop_first_mode">⚠️ Por favor detenga el servicio antes de cambiar el modo de conexión</string>
+    <string name="log_stream_direction">Dirección del flujo: %s</string>
+    <string name="log_connection_mode">Modo de conexión: %s</string>
+    <string name="log_error">❌ Error: %s</string>
+    <string name="log_connecting">🔄 Conectando…</string>
+    <string name="log_connected_to">✅ Conectado a: %s</string>
+    <string name="log_streaming_started">📹 Transmisión iniciada</string>
+    <string name="log_disconnected">🔌 Desconectado</string>
+    <string name="log_server_status">Estado del servidor: %s</string>
+    <string name="log_starting_service">🔄 Iniciando servicio…</string>
+    <string name="log_waiting_connection">⏳ Esperando conexión del teléfono…</string>
+    <string name="log_client_connected">✅ Conectado: %s</string>
+    <string name="log_service_stopped">🔌 Servicio detenido</string>
+    
+    <!-- Permissions -->
+    <string name="error_permissions_required">Se requieren permisos de cámara y Bluetooth para usar esta aplicación</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_language_desc">Seleccionar idioma de la aplicación</string>
+    <string name="settings_about">Acerca de</string>
+    <string name="settings_version">Versión</string>
+    
+    <!-- Language Names -->
+    <string name="lang_en">English</string>
+    <string name="lang_zh_cn">简体中文</string>
+    <string name="lang_zh_tw">繁體中文</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_th">ไทย</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_system">Predeterminado del sistema</string>
+    
+    <!-- Simple Glasses UI -->
+    <string name="glasses_status_idle">Listo</string>
+    <string name="glasses_status_waiting">Esperando…</string>
+    <string name="glasses_status_connected">Conectado</string>
+    <string name="glasses_status_streaming">Transmitiendo</string>
+    
+    <string name="hint_tap_to_start">Toca para iniciar</string>
+    <string name="hint_tap_to_cancel">Toca para cancelar</string>
+    <string name="hint_tap_to_disconnect">Toca para desconectar</string>
+    <string name="hint_swipe_to_switch">Desliza para cambiar modo</string>
+
+    <!-- Glasses Scanner UI -->
+    <string name="glasses_select_phone">Seleccionar teléfono</string>
+    <string name="glasses_scan">Escanear</string>
+    <string name="glasses_scanning">Buscando dispositivos…</string>
+    <string name="glasses_searching">Buscando teléfonos…</string>
+    <string name="glasses_no_devices">No se encontraron dispositivos</string>
+    <string name="glasses_tap_to_scan">Toca actualizar para escanear</string>
+    <string name="glasses_unknown_device">Dispositivo desconocido</string>
+    <string name="glasses_connecting">Conectando…</string>
+    <string name="glasses_connected">Conectado</string>
+    <string name="glasses_long_press_disconnect">Toca dos veces para desconectar</string>
+    <string name="glasses_swipe_hint">Desliza para seleccionar • Toca para conectar</string>
+</resources>

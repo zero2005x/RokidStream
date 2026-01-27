@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "com.rokid.stream.receiver"
+    namespace = "com.rokid.stream.sender"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.rokid.stream.receiver"
+        applicationId = "com.rokid.stream.sender"
         minSdk = 29
-        targetSdk = 32
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
     }
@@ -47,6 +47,9 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.lz4.java)
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
     
     // Jetpack Compose
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))
@@ -58,14 +61,10 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
     debugImplementation("androidx.compose.ui:ui-tooling")
     
-    // CameraX for reverse streaming (glasses -> phone)
-    implementation("androidx.camera:camera-camera2:1.3.0")
-    implementation("androidx.camera:camera-lifecycle:1.3.0")
-    implementation("androidx.camera:camera-view:1.3.0")
-    
-    // Rokid CXR-M SDK (for alternative connection method)
+    // Rokid CXR-M SDK
     implementation("com.rokid.cxr:client-m:1.0.1-20250812.080117-2")
     
     // Network dependencies for CXR-M SDK

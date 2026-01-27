@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Receiver main layout: Bidirectional video streaming -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Video display surface - Receives video FROM phone -->
+    <SurfaceView
+        android:id="@+id/surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Camera preview (Picture-in-Picture style) - Streams TO phone -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/preview_view"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:visibility="gone" />
+
+    <!-- Control overlay at bottom -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:background="#88000000"
+        android:padding="8dp">
+
+        <!-- Connection mode selector -->
+        <RadioGroup
+            android:id="@+id/rg_connection_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="8dp">
+            
+            <RadioButton
+                android:id="@+id/rb_l2cap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BLE L2CAP"
+                android:textColor="#FFFFFF"
+                android:checked="true" />
+            
+            <RadioButton
+                android:id="@+id/rb_wifi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WiFi TCP"
+                android:textColor="#FFFFFF"
+                android:layout_marginStart="12dp" />
+            
+            <RadioButton
+                android:id="@+id/rb_rokid_sdk"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rokid SDK"
+                android:textColor="#FFFFFF"
+                android:layout_marginStart="12dp" />
+        </RadioGroup>
+
+        <!-- Reverse streaming control button -->
+        <Button
+            android:id="@+id/btn_stream_back"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Streaming to Phone"
+            android:textSize="12sp"
+            android:enabled="false"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Status indicator -->
+        <TextView
+            android:id="@+id/status_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Waiting for connection..."
+            android:textSize="12sp"
+            android:textColor="#FFFFFF" />
+
+        <!-- Compact log output -->
+        <TextView
+            android:id="@+id/log_view"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:text="Initializing receiver (bidirectional)...\nSelect connection mode.\n"
+            android:fontFamily="monospace"
+            android:textSize="9sp"
+            android:textColor="#CCCCCC"
+            android:maxLines="5"
+            android:scrollbars="vertical"
+            android:ellipsize="start"
+            android:gravity="bottom"
+            android:paddingTop="4dp" />
+    </LinearLayout>
+
+</FrameLayout>

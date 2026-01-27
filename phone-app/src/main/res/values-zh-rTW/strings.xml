@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RokidStream</string>
+    
+    <!-- Navigation -->
+    <string name="nav_streaming">串流</string>
+    <string name="nav_settings">設定</string>
+    
+    <!-- Stream Direction -->
+    <string name="direction_phone_to_glasses">手機 → 眼鏡</string>
+    <string name="direction_glasses_to_phone">眼鏡 → 手機</string>
+    <string name="direction_bidirectional">雙向串流</string>
+    
+    <!-- Connection Mode -->
+    <string name="mode_l2cap">BLE L2CAP</string>
+    <string name="mode_l2cap_desc">低延遲藍牙連接</string>
+    <string name="mode_wifi">WiFi TCP</string>
+    <string name="mode_wifi_desc">高頻寬WiFi連接</string>
+    <string name="mode_rokid_sdk">Rokid SDK</string>
+    <string name="mode_rokid_sdk_desc">官方ARTC協議</string>
+    
+    <!-- Connection Status -->
+    <string name="status_offline">離線</string>
+    <string name="status_connecting">連接中…</string>
+    <string name="status_connected">已連接</string>
+    <string name="status_streaming">串流中</string>
+    
+    <!-- Server Status (Glasses) -->
+    <string name="status_stopped">已停止</string>
+    <string name="status_starting">啟動中…</string>
+    <string name="status_waiting">等待連接</string>
+    
+    <!-- UI Labels -->
+    <string name="title_video_preview">視頻預覽</string>
+    <string name="title_stream_direction">串流方向</string>
+    <string name="title_connection_mode">連接模式</string>
+    <string name="title_logs">日誌</string>
+    <string name="title_connected_device">已連接設備</string>
+    <string name="title_unknown_device">未知設備</string>
+    <string name="label_send">發送 →</string>
+    <string name="label_receive">← 接收</string>
+    <string name="label_send_glasses">發送 → (眼鏡)</string>
+    <string name="label_receive_phone">← 接收 (手機)</string>
+    
+    <!-- Buttons -->
+    <string name="btn_stop_streaming">停止串流</string>
+    <string name="btn_connecting">連接中…</string>
+    <string name="btn_connect_stream">連接並串流 (%s)</string>
+    <string name="btn_stop_service">停止服務</string>
+    <string name="btn_starting">啟動中…</string>
+    <string name="btn_start_service">啟動服務 (%s)</string>
+    
+    <!-- Log Messages -->
+    <string name="log_connection_status">連接狀態: %s</string>
+    <string name="log_disconnect_first_direction">⚠️ 請先斷開連接再更改串流方向</string>
+    <string name="log_disconnect_first_mode">⚠️ 請先斷開連接再更改連接模式</string>
+    <string name="log_stop_first_direction">⚠️ 請先停止服務再更改串流方向</string>
+    <string name="log_stop_first_mode">⚠️ 請先停止服務再更改連接模式</string>
+    <string name="log_stream_direction">串流方向: %s</string>
+    <string name="log_connection_mode">連接模式: %s</string>
+    <string name="log_error">❌ 錯誤: %s</string>
+    <string name="log_connecting">🔄 正在連接…</string>
+    <string name="log_connected_to">✅ 已連接到: %s</string>
+    <string name="log_streaming_started">📹 開始串流</string>
+    <string name="log_disconnected">🔌 已斷開連接</string>
+    <string name="log_server_status">服務狀態: %s</string>
+    <string name="log_starting_service">🔄 正在啟動服務…</string>
+    <string name="log_waiting_connection">⏳ 等待手機連接…</string>
+    <string name="log_client_connected">✅ 已連接: %s</string>
+    <string name="log_service_stopped">🔌 服務已停止</string>
+    
+    <!-- Permissions -->
+    <string name="error_permissions_required">使用此應用需要相機和藍牙權限</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">設定</string>
+    <string name="settings_language">語言</string>
+    <string name="settings_language_desc">選擇應用語言</string>
+    <string name="settings_logs">日誌管理</string>
+    <string name="settings_logs_desc">查看並匯出應用日誌</string>
+    <string name="settings_about">關於</string>
+    <string name="settings_version">版本</string>
+    <string name="current_language">目前語言</string>
+    <string name="language_sync_note">連接後語言將同步到眼鏡</string>
+    
+    <!-- Log Manager -->
+    <string name="log_manager_title">日誌管理</string>
+    <string name="log_search">搜尋日誌…</string>
+    <string name="log_empty">沒有日誌</string>
+    <string name="log_total">總計</string>
+    <string name="log_filter_all">顯示全部</string>
+    <string name="log_delete_title">刪除日誌</string>
+    <string name="log_delete_confirm">確定要刪除所有日誌嗎？</string>
+    <string name="log_delete_all">全部刪除</string>
+    <string name="log_deleted">日誌已刪除</string>
+    <string name="log_export_title">匯出日誌</string>
+    <string name="cancel">取消</string>
+    
+    <!-- Language Names -->
+    <string name="lang_en">English</string>
+    <string name="lang_zh_cn">简体中文</string>
+    <string name="lang_zh_tw">繁體中文</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_th">ไทย</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_system">跟隨系統</string>
+    
+    <!-- Mode Selection -->
+    <string name="select_stream_mode">選擇串流模式</string>
+    <string name="mode_phone_to_glasses">手機傳眼鏡</string>
+    <string name="mode_phone_to_glasses_desc">手機相機畫面傳送到眼鏡顯示</string>
+    <string name="mode_glasses_to_phone">眼鏡傳手機</string>
+    <string name="mode_glasses_to_phone_desc">眼鏡相機畫面傳送到手機顯示</string>
+    <string name="mode_bidirectional">雙向互傳</string>
+    <string name="mode_bidirectional_desc">同時雙向傳輸相機畫面</string>
+    
+    <!-- Transport Mode -->
+    <string name="transport_mode_title">傳輸模式</string>
+    <string name="transport_mode_desc">選擇裝置間的視訊傳輸方式</string>
+    <string name="transport_mode_short">傳輸</string>
+    <string name="transport_ble_l2cap">BLE L2CAP</string>
+    <string name="transport_ble_l2cap_desc">低延遲藍牙串流</string>
+    <string name="transport_rokid_ble">Rokid 藍牙</string>
+    <string name="transport_rokid_ble_desc">針對 Rokid AR 眼鏡優化</string>
+    <string name="transport_wifi">WiFi TCP</string>
+    <string name="transport_wifi_desc">高頻寬 WiFi 串流</string>
+    
+    <!-- Short Labels -->
+    <string name="logs_short">日誌</string>
+    <string name="language_short">語言</string>
+    <string name="close">關閉</string>
+</resources>

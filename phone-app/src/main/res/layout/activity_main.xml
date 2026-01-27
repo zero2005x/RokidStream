@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sender main layout: Bidirectional video with camera preview and received video view -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Video displays container -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <!-- Camera preview (sending to glasses) -->
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp">
+            
+            <androidx.camera.view.PreviewView
+                android:id="@+id/view_finder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:text="Sending →"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:background="#88000000"
+                android:padding="4dp" />
+        </FrameLayout>
+
+        <!-- Received video from glasses -->
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:background="#000000">
+            
+            <SurfaceView
+                android:id="@+id/received_video_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:text="← Receiving"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:background="#88000000"
+                android:padding="4dp" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Connection mode selector -->
+    <RadioGroup
+        android:id="@+id/rg_connection_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="4dp">
+        
+        <RadioButton
+            android:id="@+id/rb_l2cap"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BLE L2CAP"
+            android:checked="true" />
+        
+        <RadioButton
+            android:id="@+id/rb_wifi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="WiFi TCP"
+            android:layout_marginStart="12dp" />
+        
+        <RadioButton
+            android:id="@+id/rb_rokid_sdk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rokid SDK"
+            android:layout_marginStart="12dp" />
+    </RadioGroup>
+
+    <!-- Stream direction selector -->
+    <RadioGroup
+        android:id="@+id/rg_stream_direction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="8dp">
+        
+        <RadioButton
+            android:id="@+id/rb_phone_to_glasses"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📱→🥽 手機→眼鏡"
+            android:textSize="12sp"
+            android:checked="true" />
+        
+        <RadioButton
+            android:id="@+id/rb_glasses_to_phone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🥽→📱 眼鏡→手機"
+            android:textSize="12sp"
+            android:layout_marginStart="8dp" />
+        
+        <RadioButton
+            android:id="@+id/rb_bidirectional"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📱↔🥽 雙向"
+            android:textSize="12sp"
+            android:layout_marginStart="8dp" />
+    </RadioGroup>
+
+    <!-- Connection button and language settings -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        
+        <Button
+            android:id="@+id/btn_connect"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Connect &amp; Stream (L2CAP)"
+            android:textAllCaps="false" />
+        
+        <ImageButton
+            android:id="@+id/btn_language"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_preferences"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/settings_language"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Log output area with auto-scroll -->
+    <ScrollView
+        android:id="@+id/log_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:fillViewport="true">
+
+        <TextView
+            android:id="@+id/log_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ready for bidirectional streaming...\nSelect connection mode and tap Connect.\n"
+            android:fontFamily="monospace"
+            android:textSize="10sp"
+            android:textColor="#333333"
+            android:background="#F5F5F5"
+            android:padding="8dp" />
+    </ScrollView>
+
+</LinearLayout>

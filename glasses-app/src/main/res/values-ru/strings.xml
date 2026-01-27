@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RokidStream</string>
+    
+    <!-- Navigation -->
+    <string name="nav_streaming">Трансляция</string>
+    <string name="nav_settings">Настройки</string>
+    
+    <!-- Stream Direction -->
+    <string name="direction_phone_to_glasses">Телефон → Очки</string>
+    <string name="direction_glasses_to_phone">Очки → Телефон</string>
+    <string name="direction_bidirectional">Двунаправленная</string>
+    
+    <!-- Connection Mode -->
+    <string name="mode_l2cap">BLE L2CAP</string>
+    <string name="mode_l2cap_desc">Bluetooth с низкой задержкой</string>
+    <string name="mode_wifi">WiFi TCP</string>
+    <string name="mode_wifi_desc">WiFi с высокой пропускной способностью</string>
+    <string name="mode_rokid_sdk">Rokid SDK</string>
+    <string name="mode_rokid_sdk_desc">Официальный протокол ARTC</string>
+    
+    <!-- Connection Status -->
+    <string name="status_offline">Офлайн</string>
+    <string name="status_connecting">Подключение…</string>
+    <string name="status_connected">Подключено</string>
+    <string name="status_streaming">Трансляция</string>
+    
+    <!-- Server Status (Glasses) -->
+    <string name="status_stopped">Остановлено</string>
+    <string name="status_starting">Запуск…</string>
+    <string name="status_waiting">Ожидание</string>
+    
+    <!-- UI Labels -->
+    <string name="title_video_preview">Предпросмотр видео</string>
+    <string name="title_stream_direction">Направление потока</string>
+    <string name="title_connection_mode">Режим подключения</string>
+    <string name="title_logs">Журнал</string>
+    <string name="title_connected_device">Подключённое устройство</string>
+    <string name="title_unknown_device">Неизвестное устройство</string>
+    <string name="label_send">Отправить →</string>
+    <string name="label_receive">← Получить</string>
+    <string name="label_send_glasses">Отправить → (Очки)</string>
+    <string name="label_receive_phone">← Получить (Телефон)</string>
+    
+    <!-- Buttons -->
+    <string name="btn_stop_streaming">Остановить трансляцию</string>
+    <string name="btn_connecting">Подключение…</string>
+    <string name="btn_connect_stream">Подключить и транслировать (%s)</string>
+    <string name="btn_stop_service">Остановить сервис</string>
+    <string name="btn_starting">Запуск…</string>
+    <string name="btn_start_service">Запустить сервис (%s)</string>
+    
+    <!-- Log Messages -->
+    <string name="log_connection_status">Статус подключения: %s</string>
+    <string name="log_disconnect_first_direction">⚠️ Отключитесь перед изменением направления потока</string>
+    <string name="log_disconnect_first_mode">⚠️ Отключитесь перед изменением режима подключения</string>
+    <string name="log_stop_first_direction">⚠️ Остановите сервис перед изменением направления потока</string>
+    <string name="log_stop_first_mode">⚠️ Остановите сервис перед изменением режима подключения</string>
+    <string name="log_stream_direction">Направление потока: %s</string>
+    <string name="log_connection_mode">Режим подключения: %s</string>
+    <string name="log_error">❌ Ошибка: %s</string>
+    <string name="log_connecting">🔄 Подключение…</string>
+    <string name="log_connected_to">✅ Подключено к: %s</string>
+    <string name="log_streaming_started">📹 Трансляция началась</string>
+    <string name="log_disconnected">🔌 Отключено</string>
+    <string name="log_server_status">Статус сервера: %s</string>
+    <string name="log_starting_service">🔄 Запуск сервиса…</string>
+    <string name="log_waiting_connection">⏳ Ожидание подключения телефона…</string>
+    <string name="log_client_connected">✅ Подключено: %s</string>
+    <string name="log_service_stopped">🔌 Сервис остановлен</string>
+    
+    <!-- Permissions -->
+    <string name="error_permissions_required">Для использования приложения требуются разрешения камеры и Bluetooth</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_language_desc">Выберите язык приложения</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_version">Версия</string>
+    
+    <!-- Language Names -->
+    <string name="lang_en">English</string>
+    <string name="lang_zh_cn">简体中文</string>
+    <string name="lang_zh_tw">繁體中文</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_th">ไทย</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_system">По умолчанию системы</string>
+    
+    <!-- Simple Glasses UI -->
+    <string name="glasses_status_idle">Готов</string>
+    <string name="glasses_status_waiting">Ожидание…</string>
+    <string name="glasses_status_connected">Подключено</string>
+    <string name="glasses_status_streaming">Трансляция</string>
+    
+    <string name="hint_tap_to_start">Нажмите для старта</string>
+    <string name="hint_tap_to_cancel">Нажмите для отмены</string>
+    <string name="hint_tap_to_disconnect">Нажмите для отключения</string>
+    <string name="hint_swipe_to_switch">Свайп для смены режима</string>
+
+    <!-- Glasses Scanner UI -->
+    <string name="glasses_select_phone">Выбрать телефон</string>
+    <string name="glasses_scan">Сканировать</string>
+    <string name="glasses_scanning">Поиск устройств…</string>
+    <string name="glasses_searching">Поиск телефонов…</string>
+    <string name="glasses_no_devices">Устройства не найдены</string>
+    <string name="glasses_tap_to_scan">Нажмите обновить для сканирования</string>
+    <string name="glasses_unknown_device">Неизвестное устройство</string>
+    <string name="glasses_connecting">Подключение…</string>
+    <string name="glasses_connected">Подключено</string>
+    <string name="glasses_long_press_disconnect">Двойное касание для отключения</string>
+    <string name="glasses_swipe_hint">Проведите для выбора • Нажмите для подключения</string>
+</resources>

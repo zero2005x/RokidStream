@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RokidStream</string>
+    
+    <!-- Navigation -->
+    <string name="nav_streaming">Streaming</string>
+    <string name="nav_settings">Settings</string>
+    
+    <!-- Stream Direction -->
+    <string name="direction_phone_to_glasses">Phone → Glasses</string>
+    <string name="direction_glasses_to_phone">Glasses → Phone</string>
+    <string name="direction_bidirectional">Bidirectional</string>
+    
+    <!-- Connection Mode -->
+    <string name="mode_l2cap">BLE L2CAP</string>
+    <string name="mode_l2cap_desc">Low latency Bluetooth</string>
+    <string name="mode_wifi">WiFi TCP</string>
+    <string name="mode_wifi_desc">High bandwidth WiFi</string>
+    <string name="mode_rokid_sdk">Rokid SDK</string>
+    <string name="mode_rokid_sdk_desc">Official ARTC protocol</string>
+    
+    <!-- Connection Status -->
+    <string name="status_offline">Offline</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_streaming">Streaming</string>
+    
+    <!-- Server Status (Glasses) -->
+    <string name="status_stopped">Stopped</string>
+    <string name="status_starting">Starting…</string>
+    <string name="status_waiting">Waiting</string>
+    
+    <!-- UI Labels -->
+    <string name="title_video_preview">Video Preview</string>
+    <string name="title_stream_direction">Stream Direction</string>
+    <string name="title_connection_mode">Connection Mode</string>
+    <string name="title_logs">Logs</string>
+    <string name="title_connected_device">Connected Device</string>
+    <string name="title_unknown_device">Unknown device</string>
+    <string name="label_send">Send →</string>
+    <string name="label_receive">← Receive</string>
+    <string name="label_send_glasses">Send → (Glasses)</string>
+    <string name="label_receive_phone">← Receive (Phone)</string>
+    
+    <!-- Buttons -->
+    <string name="btn_stop_streaming">Stop Streaming</string>
+    <string name="btn_connecting">Connecting…</string>
+    <string name="btn_connect_stream">Connect &amp; Stream (%s)</string>
+    <string name="btn_stop_service">Stop Service</string>
+    <string name="btn_starting">Starting…</string>
+    <string name="btn_start_service">Start Service (%s)</string>
+    
+    <!-- Log Messages -->
+    <string name="log_connection_status">Connection status: %s</string>
+    <string name="log_disconnect_first_direction">⚠️ Please disconnect first before changing stream direction</string>
+    <string name="log_disconnect_first_mode">⚠️ Please disconnect first before changing connection mode</string>
+    <string name="log_stop_first_direction">⚠️ Please stop service first before changing stream direction</string>
+    <string name="log_stop_first_mode">⚠️ Please stop service first before changing connection mode</string>
+    <string name="log_stream_direction">Stream direction: %s</string>
+    <string name="log_connection_mode">Connection mode: %s</string>
+    <string name="log_error">❌ Error: %s</string>
+    <string name="log_connecting">🔄 Connecting…</string>
+    <string name="log_connected_to">✅ Connected to: %s</string>
+    <string name="log_streaming_started">📹 Streaming started</string>
+    <string name="log_disconnected">🔌 Disconnected</string>
+    <string name="log_server_status">Server status: %s</string>
+    <string name="log_starting_service">🔄 Starting service…</string>
+    <string name="log_waiting_connection">⏳ Waiting for phone connection…</string>
+    <string name="log_client_connected">✅ Connected: %s</string>
+    <string name="log_service_stopped">🔌 Service stopped</string>
+    
+    <!-- Permissions -->
+    <string name="error_permissions_required">Camera and Bluetooth permissions are required to use this app</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_desc">Select app language</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version</string>
+    
+    <!-- Language Names -->
+    <string name="lang_en">English</string>
+    <string name="lang_zh_cn">简体中文</string>
+    <string name="lang_zh_tw">繁體中文</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_th">ไทย</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_system">System Default</string>
+    
+    <!-- Simple Glasses UI -->
+    <string name="glasses_status_idle">Ready</string>
+    <string name="glasses_status_waiting">Waiting…</string>
+    <string name="glasses_status_connected">Connected</string>
+    <string name="glasses_status_streaming">Streaming</string>
+    
+    <string name="hint_tap_to_start">Tap to Start</string>
+    <string name="hint_tap_to_cancel">Tap to Cancel</string>
+    <string name="hint_tap_to_disconnect">Tap to Disconnect</string>
+    <string name="hint_swipe_to_switch">Swipe to Switch Mode</string>
+    
+    <!-- Glasses Scanner UI -->
+    <string name="glasses_select_phone">Select Phone</string>
+    <string name="glasses_scan">Scan</string>
+    <string name="glasses_scanning">Scanning for devices…</string>
+    <string name="glasses_searching">Searching for phones…</string>
+    <string name="glasses_no_devices">No devices found</string>
+    <string name="glasses_tap_to_scan">Tap refresh to scan</string>
+    <string name="glasses_unknown_device">Unknown Device</string>
+    <string name="glasses_connecting">Connecting…</string>
+    <string name="glasses_connected">Connected</string>
+    <string name="glasses_long_press_disconnect">Double-tap to disconnect</string>
+    <string name="glasses_swipe_hint">Swipe to scroll • Tap to select</string>
+</resources>

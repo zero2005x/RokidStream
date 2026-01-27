@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+    <uses-feature android:name="android.hardware.camera.any" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Bluetooth Permissions -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    
+    <!-- Location Permissions (for Wi-Fi/BT scanning) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    
+    <!-- Network Permissions (for CXR-M SDK) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="tiramisu" />
+    
+    <!-- Service Permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.RokidStream">
+        
+        <!-- NEW: Mode Selection as main launcher -->
+        <activity
+            android:name=".streaming.ModeSelectionActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <!-- Phone to Glasses streaming -->
+        <activity
+            android:name=".streaming.PhoneToGlassesActivity"
+            android:exported="false"
+            android:parentActivityName=".streaming.ModeSelectionActivity"
+            android:screenOrientation="portrait" />
+        
+        <!-- Glasses to Phone streaming -->
+        <activity
+            android:name=".streaming.GlassesToPhoneActivity"
+            android:exported="false"
+            android:parentActivityName=".streaming.ModeSelectionActivity"
+            android:screenOrientation="portrait" />
+        
+        <!-- Bidirectional streaming -->
+        <activity
+            android:name=".streaming.BidirectionalActivity"
+            android:exported="false"
+            android:parentActivityName=".streaming.ModeSelectionActivity"
+            android:screenOrientation="portrait" />
+        
+        <!-- LEGACY: Original MainActivity (kept for backwards compatibility) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".streaming.ModeSelectionActivity" />
+        <activity
+            android:name=".ui.LanguageSelectionActivity"
+            android:exported="false"
+            android:parentActivityName=".streaming.ModeSelectionActivity" />
+        
+        <!-- FileProvider for sharing log files -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+
+</manifest>

@@ -21,5 +21,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "RokidStream"
-include(":sender")
-include(":receiver")
+include(":phone-app")
+include(":glasses-app")

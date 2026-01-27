@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RokidStream</string>
+    
+    <!-- Navigation -->
+    <string name="nav_streaming">스트리밍</string>
+    <string name="nav_settings">설정</string>
+    
+    <!-- Stream Direction -->
+    <string name="direction_phone_to_glasses">휴대폰 → 안경</string>
+    <string name="direction_glasses_to_phone">안경 → 휴대폰</string>
+    <string name="direction_bidirectional">양방향</string>
+    
+    <!-- Connection Mode -->
+    <string name="mode_l2cap">BLE L2CAP</string>
+    <string name="mode_l2cap_desc">저지연 블루투스</string>
+    <string name="mode_wifi">WiFi TCP</string>
+    <string name="mode_wifi_desc">고대역폭 WiFi</string>
+    <string name="mode_rokid_sdk">Rokid SDK</string>
+    <string name="mode_rokid_sdk_desc">공식 ARTC 프로토콜</string>
+    
+    <!-- Connection Status -->
+    <string name="status_offline">오프라인</string>
+    <string name="status_connecting">연결 중…</string>
+    <string name="status_connected">연결됨</string>
+    <string name="status_streaming">스트리밍 중</string>
+    
+    <!-- Server Status (Glasses) -->
+    <string name="status_stopped">중지됨</string>
+    <string name="status_starting">시작 중…</string>
+    <string name="status_waiting">대기 중</string>
+    
+    <!-- UI Labels -->
+    <string name="title_video_preview">비디오 미리보기</string>
+    <string name="title_stream_direction">스트림 방향</string>
+    <string name="title_connection_mode">연결 모드</string>
+    <string name="title_logs">로그</string>
+    <string name="title_connected_device">연결된 장치</string>
+    <string name="title_unknown_device">알 수 없는 장치</string>
+    <string name="label_send">보내기 →</string>
+    <string name="label_receive">← 받기</string>
+    <string name="label_send_glasses">보내기 → (안경)</string>
+    <string name="label_receive_phone">← 받기 (휴대폰)</string>
+    
+    <!-- Buttons -->
+    <string name="btn_stop_streaming">스트리밍 중지</string>
+    <string name="btn_connecting">연결 중…</string>
+    <string name="btn_connect_stream">연결 및 스트림 (%s)</string>
+    <string name="btn_stop_service">서비스 중지</string>
+    <string name="btn_starting">시작 중…</string>
+    <string name="btn_start_service">서비스 시작 (%s)</string>
+    
+    <!-- Log Messages -->
+    <string name="log_connection_status">연결 상태: %s</string>
+    <string name="log_disconnect_first_direction">⚠️ 스트림 방향을 변경하기 전에 연결을 끊어주세요</string>
+    <string name="log_disconnect_first_mode">⚠️ 연결 모드를 변경하기 전에 연결을 끊어주세요</string>
+    <string name="log_stop_first_direction">⚠️ 스트림 방향을 변경하기 전에 서비스를 중지해주세요</string>
+    <string name="log_stop_first_mode">⚠️ 연결 모드를 변경하기 전에 서비스를 중지해주세요</string>
+    <string name="log_stream_direction">스트림 방향: %s</string>
+    <string name="log_connection_mode">연결 모드: %s</string>
+    <string name="log_error">❌ 오류: %s</string>
+    <string name="log_connecting">🔄 연결 중…</string>
+    <string name="log_connected_to">✅ 연결됨: %s</string>
+    <string name="log_streaming_started">📹 스트리밍 시작</string>
+    <string name="log_disconnected">🔌 연결 끊김</string>
+    <string name="log_server_status">서버 상태: %s</string>
+    <string name="log_starting_service">🔄 서비스 시작 중…</string>
+    <string name="log_waiting_connection">⏳ 휴대폰 연결 대기 중…</string>
+    <string name="log_client_connected">✅ 연결됨: %s</string>
+    <string name="log_service_stopped">🔌 서비스 중지됨</string>
+    
+    <!-- Permissions -->
+    <string name="error_permissions_required">이 앱을 사용하려면 카메라와 블루투스 권한이 필요합니다</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">설정</string>
+    <string name="settings_language">언어</string>
+    <string name="settings_language_desc">앱 언어 선택</string>
+    <string name="settings_logs">로그 관리</string>
+    <string name="settings_logs_desc">앱 로그 보기 및 내보내기</string>
+    <string name="settings_about">앱 정보</string>
+    <string name="settings_version">버전</string>
+    <string name="current_language">현재 언어</string>
+    <string name="language_sync_note">연결 시 언어가 안경에 동기화됩니다</string>
+    
+    <!-- Log Manager -->
+    <string name="log_manager_title">로그 관리</string>
+    <string name="log_search">로그 검색…</string>
+    <string name="log_empty">로그가 없습니다</string>
+    <string name="log_total">총</string>
+    <string name="log_filter_all">모두 표시</string>
+    <string name="log_delete_title">로그 삭제</string>
+    <string name="log_delete_confirm">모든 로그를 삭제하시겠습니까?</string>
+    <string name="log_delete_all">모두 삭제</string>
+    <string name="log_deleted">로그가 삭제되었습니다</string>
+    <string name="log_export_title">로그 내보내기</string>
+    <string name="cancel">취소</string>
+    
+    <!-- Language Names -->
+    <string name="lang_en">English</string>
+    <string name="lang_zh_cn">简体中文</string>
+    <string name="lang_zh_tw">繁體中文</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_th">ไทย</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_system">시스템 기본값</string>
+    
+    <!-- Mode Selection -->
+    <string name="select_stream_mode">스트리밍 모드 선택</string>
+    <string name="mode_phone_to_glasses">휴대폰에서 안경으로</string>
+    <string name="mode_phone_to_glasses_desc">휴대폰 카메라를 안경 디스플레이로 전송</string>
+    <string name="mode_glasses_to_phone">안경에서 휴대폰으로</string>
+    <string name="mode_glasses_to_phone_desc">안경 카메라를 휴대폰 디스플레이로 전송</string>
+    <string name="mode_bidirectional">양방향</string>
+    <string name="mode_bidirectional_desc">동시 양방향 스트리밍</string>
+    
+    <!-- Transport Mode -->
+    <string name="transport_mode_title">전송 모드</string>
+    <string name="transport_mode_desc">장치 간 비디오 전송 방법 선택</string>
+    <string name="transport_mode_short">전송</string>
+    <string name="transport_ble_l2cap">BLE L2CAP</string>
+    <string name="transport_ble_l2cap_desc">저지연 블루투스 스트리밍</string>
+    <string name="transport_rokid_ble">Rokid Bluetooth</string>
+    <string name="transport_rokid_ble_desc">Rokid AR 안경에 최적화</string>
+    <string name="transport_wifi">WiFi TCP</string>
+    <string name="transport_wifi_desc">고대역폭 WiFi 스트리밍</string>
+    
+    <!-- Short Labels -->
+    <string name="logs_short">로그</string>
+    <string name="language_short">언어</string>
+    <string name="close">닫기</string>
+</resources>

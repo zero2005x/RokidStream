@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RokidStream</string>
+    
+    <!-- Navigation -->
+    <string name="nav_streaming">สตรีม</string>
+    <string name="nav_settings">การตั้งค่า</string>
+    
+    <!-- Stream Direction -->
+    <string name="direction_phone_to_glasses">โทรศัพท์ → แว่นตา</string>
+    <string name="direction_glasses_to_phone">แว่นตา → โทรศัพท์</string>
+    <string name="direction_bidirectional">สองทาง</string>
+    
+    <!-- Connection Mode -->
+    <string name="mode_l2cap">BLE L2CAP</string>
+    <string name="mode_l2cap_desc">บลูทูธเวลาแฝงต่ำ</string>
+    <string name="mode_wifi">WiFi TCP</string>
+    <string name="mode_wifi_desc">WiFi แบนด์วิดท์สูง</string>
+    <string name="mode_rokid_sdk">Rokid SDK</string>
+    <string name="mode_rokid_sdk_desc">โปรโตคอล ARTC ทางการ</string>
+    
+    <!-- Connection Status -->
+    <string name="status_offline">ออฟไลน์</string>
+    <string name="status_connecting">กำลังเชื่อมต่อ…</string>
+    <string name="status_connected">เชื่อมต่อแล้ว</string>
+    <string name="status_streaming">กำลังสตรีม</string>
+    
+    <!-- Server Status (Glasses) -->
+    <string name="status_stopped">หยุดแล้ว</string>
+    <string name="status_starting">กำลังเริ่ม…</string>
+    <string name="status_waiting">กำลังรอ</string>
+    
+    <!-- UI Labels -->
+    <string name="title_video_preview">ดูตัวอย่างวิดีโอ</string>
+    <string name="title_stream_direction">ทิศทางสตรีม</string>
+    <string name="title_connection_mode">โหมดการเชื่อมต่อ</string>
+    <string name="title_logs">บันทึก</string>
+    <string name="title_connected_device">อุปกรณ์ที่เชื่อมต่อ</string>
+    <string name="title_unknown_device">อุปกรณ์ไม่ทราบ</string>
+    <string name="label_send">ส่ง →</string>
+    <string name="label_receive">← รับ</string>
+    <string name="label_send_glasses">ส่ง → (แว่นตา)</string>
+    <string name="label_receive_phone">← รับ (โทรศัพท์)</string>
+    
+    <!-- Buttons -->
+    <string name="btn_stop_streaming">หยุดสตรีม</string>
+    <string name="btn_connecting">กำลังเชื่อมต่อ…</string>
+    <string name="btn_connect_stream">เชื่อมต่อและสตรีม (%s)</string>
+    <string name="btn_stop_service">หยุดบริการ</string>
+    <string name="btn_starting">กำลังเริ่ม…</string>
+    <string name="btn_start_service">เริ่มบริการ (%s)</string>
+    
+    <!-- Log Messages -->
+    <string name="log_connection_status">สถานะการเชื่อมต่อ: %s</string>
+    <string name="log_disconnect_first_direction">⚠️ กรุณาตัดการเชื่อมต่อก่อนเปลี่ยนทิศทางสตรีม</string>
+    <string name="log_disconnect_first_mode">⚠️ กรุณาตัดการเชื่อมต่อก่อนเปลี่ยนโหมดการเชื่อมต่อ</string>
+    <string name="log_stop_first_direction">⚠️ กรุณาหยุดบริการก่อนเปลี่ยนทิศทางสตรีม</string>
+    <string name="log_stop_first_mode">⚠️ กรุณาหยุดบริการก่อนเปลี่ยนโหมดการเชื่อมต่อ</string>
+    <string name="log_stream_direction">ทิศทางสตรีม: %s</string>
+    <string name="log_connection_mode">โหมดการเชื่อมต่อ: %s</string>
+    <string name="log_error">❌ ข้อผิดพลาด: %s</string>
+    <string name="log_connecting">🔄 กำลังเชื่อมต่อ…</string>
+    <string name="log_connected_to">✅ เชื่อมต่อกับ: %s</string>
+    <string name="log_streaming_started">📹 เริ่มสตรีมแล้ว</string>
+    <string name="log_disconnected">🔌 ตัดการเชื่อมต่อแล้ว</string>
+    <string name="log_server_status">สถานะเซิร์ฟเวอร์: %s</string>
+    <string name="log_starting_service">🔄 กำลังเริ่มบริการ…</string>
+    <string name="log_waiting_connection">⏳ กำลังรอการเชื่อมต่อโทรศัพท์…</string>
+    <string name="log_client_connected">✅ เชื่อมต่อแล้ว: %s</string>
+    <string name="log_service_stopped">🔌 บริการหยุดแล้ว</string>
+    
+    <!-- Permissions -->
+    <string name="error_permissions_required">ต้องการสิทธิ์กล้องและบลูทูธเพื่อใช้แอปนี้</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">การตั้งค่า</string>
+    <string name="settings_language">ภาษา</string>
+    <string name="settings_language_desc">เลือกภาษาแอป</string>
+    <string name="settings_logs">การจัดการบันทึก</string>
+    <string name="settings_logs_desc">ดูและส่งออกบันทึกแอป</string>
+    <string name="settings_about">เกี่ยวกับ</string>
+    <string name="settings_version">เวอร์ชัน</string>
+    <string name="current_language">ภาษาปัจจุบัน</string>
+    <string name="language_sync_note">ภาษาจะซิงค์กับแว่นตาเมื่อเชื่อมต่อ</string>
+    
+    <!-- Log Manager -->
+    <string name="log_manager_title">การจัดการบันทึก</string>
+    <string name="log_search">ค้นหาบันทึก…</string>
+    <string name="log_empty">ไม่มีบันทึก</string>
+    <string name="log_total">ทั้งหมด</string>
+    <string name="log_filter_all">แสดงทั้งหมด</string>
+    <string name="log_delete_title">ลบบันทึก</string>
+    <string name="log_delete_confirm">คุณแน่ใจหรือไม่ว่าต้องการลบบันทึกทั้งหมด?</string>
+    <string name="log_delete_all">ลบทั้งหมด</string>
+    <string name="log_deleted">ลบบันทึกแล้ว</string>
+    <string name="log_export_title">ส่งออกบันทึก</string>
+    <string name="cancel">ยกเลิก</string>
+    
+    <!-- Language Names -->
+    <string name="lang_en">English</string>
+    <string name="lang_zh_cn">简体中文</string>
+    <string name="lang_zh_tw">繁體中文</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_th">ไทย</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_system">ค่าเริ่มต้นของระบบ</string>
+    
+    <!-- Mode Selection -->
+    <string name="select_stream_mode">เลือกโหมดสตรีม</string>
+    <string name="mode_phone_to_glasses">โทรศัพท์ไปยังแว่นตา</string>
+    <string name="mode_phone_to_glasses_desc">ส่งกล้องโทรศัพท์ไปยังจอแสดงผลแว่นตา</string>
+    <string name="mode_glasses_to_phone">แว่นตาไปยังโทรศัพท์</string>
+    <string name="mode_glasses_to_phone_desc">ส่งกล้องแว่นตาไปยังจอแสดงผลโทรศัพท์</string>
+    <string name="mode_bidirectional">สองทาง</string>
+    <string name="mode_bidirectional_desc">สตรีมสองทางพร้อมกัน</string>
+    
+    <!-- Transport Mode -->
+    <string name="transport_mode_title">โหมดการส่ง</string>
+    <string name="transport_mode_desc">เลือกวิธีส่งวิดีโอระหว่างอุปกรณ์</string>
+    <string name="transport_mode_short">การส่ง</string>
+    <string name="transport_ble_l2cap">BLE L2CAP</string>
+    <string name="transport_ble_l2cap_desc">สตรีมบลูทูธเวลาแฝงต่ำ</string>
+    <string name="transport_rokid_ble">Rokid Bluetooth</string>
+    <string name="transport_rokid_ble_desc">ปรับให้เหมาะสำหรับแว่นตา Rokid AR</string>
+    <string name="transport_wifi">WiFi TCP</string>
+    <string name="transport_wifi_desc">สตรีม WiFi แบนด์วิดท์สูง</string>
+    
+    <!-- Short Labels -->
+    <string name="logs_short">บันทึก</string>
+    <string name="language_short">ภาษา</string>
+    <string name="close">ปิด</string>
+</resources>

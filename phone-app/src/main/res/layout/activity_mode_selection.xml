@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mode Selection Layout - Entry point for choosing streaming mode -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center">
+
+    <!-- App Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RokidStream"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="?attr/colorAccent"
+        android:layout_marginBottom="8dp" />
+    
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_stream_mode"
+        android:textSize="18sp"
+        android:textColor="#666666"
+        android:layout_marginBottom="48dp" />
+
+    <!-- Phone to Glasses Mode -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_phone_to_glasses"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="📱"
+                android:textSize="32sp"
+                android:gravity="center" />
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="→"
+                android:textSize="24sp"
+                android:gravity="center"
+                android:textColor="?attr/colorAccent" />
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="🥽"
+                android:textSize="32sp"
+                android:gravity="center" />
+            
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mode_phone_to_glasses"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mode_phone_to_glasses_desc"
+                    android:textSize="14sp"
+                    android:alpha="0.7" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Glasses to Phone Mode -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_glasses_to_phone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="🥽"
+                android:textSize="32sp"
+                android:gravity="center" />
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="→"
+                android:textSize="24sp"
+                android:gravity="center"
+                android:textColor="#4CAF50" />
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="📱"
+                android:textSize="32sp"
+                android:gravity="center" />
+            
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mode_glasses_to_phone"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mode_glasses_to_phone_desc"
+                    android:textSize="14sp"
+                    android:alpha="0.7" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Bidirectional Mode -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_bidirectional"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="📱"
+                android:textSize="32sp"
+                android:gravity="center" />
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:text="↔"
+                android:textSize="24sp"
+                android:gravity="center"
+                android:textColor="#FF9800" />
+            
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="🥽"
+                android:textSize="32sp"
+                android:gravity="center" />
+            
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mode_bidirectional"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mode_bidirectional_desc"
+                    android:textSize="14sp"
+                    android:alpha="0.7" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Transport Mode Indicator -->
+    <LinearLayout
+        android:id="@+id/transport_mode_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/transport_mode_bg"
+        android:clickable="true"
+        android:focusable="true">
+        
+        <ImageView
+            android:id="@+id/icon_transport_mode"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/stat_sys_data_bluetooth"
+            android:contentDescription="@string/transport_mode_title" />
+        
+        <TextView
+            android:id="@+id/text_transport_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/transport_ble_l2cap"
+            android:textSize="14sp" />
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="▼"
+            android:textSize="12sp"
+            android:alpha="0.6" />
+    </LinearLayout>
+
+    <!-- Bottom Action Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingTop="8dp">
+        
+        <!-- Settings Button with Label -->
+        <LinearLayout
+            android:id="@+id/btn_settings_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp">
+            
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:contentDescription="@string/settings_title" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_title"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+        
+        <!-- Transport Mode Button with Label -->
+        <LinearLayout
+            android:id="@+id/btn_transport_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp">
+            
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/stat_sys_data_bluetooth"
+                android:contentDescription="@string/transport_mode_title" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/transport_mode_short"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+        
+        <!-- Log Manager Button with Label -->
+        <LinearLayout
+            android:id="@+id/btn_logs_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp">
+            
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_agenda"
+                android:contentDescription="@string/settings_logs" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/logs_short"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+        
+        <!-- Language Button with Label -->
+        <LinearLayout
+            android:id="@+id/btn_language_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp">
+            
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_more"
+                android:contentDescription="@string/settings_language" />
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/language_short"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

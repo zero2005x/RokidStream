@@ -110,3 +110,7 @@ fabric.properties
 # Backup files
 *.bak
 *.backup
+
+# Rokid specific ignores
+
+.lc

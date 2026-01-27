@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RokidStream</string>
+    
+    <!-- Navigation -->
+    <string name="nav_streaming">Phát trực tiếp</string>
+    <string name="nav_settings">Cài đặt</string>
+    
+    <!-- Stream Direction -->
+    <string name="direction_phone_to_glasses">Điện thoại → Kính</string>
+    <string name="direction_glasses_to_phone">Kính → Điện thoại</string>
+    <string name="direction_bidirectional">Hai chiều</string>
+    
+    <!-- Connection Mode -->
+    <string name="mode_l2cap">BLE L2CAP</string>
+    <string name="mode_l2cap_desc">Bluetooth độ trễ thấp</string>
+    <string name="mode_wifi">WiFi TCP</string>
+    <string name="mode_wifi_desc">WiFi băng thông cao</string>
+    <string name="mode_rokid_sdk">Rokid SDK</string>
+    <string name="mode_rokid_sdk_desc">Giao thức ARTC chính thức</string>
+    
+    <!-- Connection Status -->
+    <string name="status_offline">Ngoại tuyến</string>
+    <string name="status_connecting">Đang kết nối…</string>
+    <string name="status_connected">Đã kết nối</string>
+    <string name="status_streaming">Đang phát</string>
+    
+    <!-- Server Status (Glasses) -->
+    <string name="status_stopped">Đã dừng</string>
+    <string name="status_starting">Đang khởi động…</string>
+    <string name="status_waiting">Đang chờ</string>
+    
+    <!-- UI Labels -->
+    <string name="title_video_preview">Xem trước video</string>
+    <string name="title_stream_direction">Hướng phát</string>
+    <string name="title_connection_mode">Chế độ kết nối</string>
+    <string name="title_logs">Nhật ký</string>
+    <string name="title_connected_device">Thiết bị đã kết nối</string>
+    <string name="title_unknown_device">Thiết bị không xác định</string>
+    <string name="label_send">Gửi →</string>
+    <string name="label_receive">← Nhận</string>
+    <string name="label_send_glasses">Gửi → (Kính)</string>
+    <string name="label_receive_phone">← Nhận (Điện thoại)</string>
+    
+    <!-- Buttons -->
+    <string name="btn_stop_streaming">Dừng phát</string>
+    <string name="btn_connecting">Đang kết nối…</string>
+    <string name="btn_connect_stream">Kết nối và Phát (%s)</string>
+    <string name="btn_stop_service">Dừng dịch vụ</string>
+    <string name="btn_starting">Đang khởi động…</string>
+    <string name="btn_start_service">Khởi động dịch vụ (%s)</string>
+    
+    <!-- Log Messages -->
+    <string name="log_connection_status">Trạng thái kết nối: %s</string>
+    <string name="log_disconnect_first_direction">⚠️ Vui lòng ngắt kết nối trước khi thay đổi hướng phát</string>
+    <string name="log_disconnect_first_mode">⚠️ Vui lòng ngắt kết nối trước khi thay đổi chế độ kết nối</string>
+    <string name="log_stop_first_direction">⚠️ Vui lòng dừng dịch vụ trước khi thay đổi hướng phát</string>
+    <string name="log_stop_first_mode">⚠️ Vui lòng dừng dịch vụ trước khi thay đổi chế độ kết nối</string>
+    <string name="log_stream_direction">Hướng phát: %s</string>
+    <string name="log_connection_mode">Chế độ kết nối: %s</string>
+    <string name="log_error">❌ Lỗi: %s</string>
+    <string name="log_connecting">🔄 Đang kết nối…</string>
+    <string name="log_connected_to">✅ Đã kết nối đến: %s</string>
+    <string name="log_streaming_started">📹 Bắt đầu phát</string>
+    <string name="log_disconnected">🔌 Đã ngắt kết nối</string>
+    <string name="log_server_status">Trạng thái máy chủ: %s</string>
+    <string name="log_starting_service">🔄 Đang khởi động dịch vụ…</string>
+    <string name="log_waiting_connection">⏳ Đang chờ kết nối điện thoại…</string>
+    <string name="log_client_connected">✅ Đã kết nối: %s</string>
+    <string name="log_service_stopped">🔌 Dịch vụ đã dừng</string>
+    
+    <!-- Permissions -->
+    <string name="error_permissions_required">Cần có quyền Camera và Bluetooth để sử dụng ứng dụng này</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Cài đặt</string>
+    <string name="settings_language">Ngôn ngữ</string>
+    <string name="settings_language_desc">Chọn ngôn ngữ ứng dụng</string>
+    <string name="settings_about">Giới thiệu</string>
+    <string name="settings_version">Phiên bản</string>
+    
+    <!-- Language Names -->
+    <string name="lang_en">English</string>
+    <string name="lang_zh_cn">简体中文</string>
+    <string name="lang_zh_tw">繁體中文</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_th">ไทย</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_system">Mặc định hệ thống</string>
+    
+    <!-- Simple Glasses UI -->
+    <string name="glasses_status_idle">Sẵn sàng</string>
+    <string name="glasses_status_waiting">Đang chờ…</string>
+    <string name="glasses_status_connected">Đã kết nối</string>
+    <string name="glasses_status_streaming">Đang phát</string>
+    
+    <string name="hint_tap_to_start">Chạm để bắt đầu</string>
+    <string name="hint_tap_to_cancel">Chạm để hủy</string>
+    <string name="hint_tap_to_disconnect">Chạm để ngắt kết nối</string>
+    <string name="hint_swipe_to_switch">Vuốt để chuyển chế độ</string>
+
+    <!-- Glasses Scanner UI -->
+    <string name="glasses_select_phone">Chọn điện thoại</string>
+    <string name="glasses_scan">Quét</string>
+    <string name="glasses_scanning">Đang quét thiết bị…</string>
+    <string name="glasses_searching">Đang tìm điện thoại…</string>
+    <string name="glasses_no_devices">Không tìm thấy thiết bị</string>
+    <string name="glasses_tap_to_scan">Nhấn làm mới để quét</string>
+    <string name="glasses_unknown_device">Thiết bị không xác định</string>
+    <string name="glasses_connecting">Đang kết nối…</string>
+    <string name="glasses_connected">Đã kết nối</string>
+    <string name="glasses_long_press_disconnect">Nhấn đúp để ngắt kết nối</string>
+    <string name="glasses_swipe_hint">Vuốt để chọn • Nhấn để kết nối</string>
+</resources>

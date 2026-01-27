@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RokidStream</string>
+    
+    <!-- Navigation -->
+    <string name="nav_streaming">Streaming</string>
+    <string name="nav_settings">Impostazioni</string>
+    
+    <!-- Stream Direction -->
+    <string name="direction_phone_to_glasses">Telefono → Occhiali</string>
+    <string name="direction_glasses_to_phone">Occhiali → Telefono</string>
+    <string name="direction_bidirectional">Bidirezionale</string>
+    
+    <!-- Connection Mode -->
+    <string name="mode_l2cap">BLE L2CAP</string>
+    <string name="mode_l2cap_desc">Bluetooth a bassa latenza</string>
+    <string name="mode_wifi">WiFi TCP</string>
+    <string name="mode_wifi_desc">WiFi ad alta larghezza di banda</string>
+    <string name="mode_rokid_sdk">Rokid SDK</string>
+    <string name="mode_rokid_sdk_desc">Protocollo ARTC ufficiale</string>
+    
+    <!-- Connection Status -->
+    <string name="status_offline">Offline</string>
+    <string name="status_connecting">Connessione…</string>
+    <string name="status_connected">Connesso</string>
+    <string name="status_streaming">In streaming</string>
+    
+    <!-- Server Status (Glasses) -->
+    <string name="status_stopped">Fermato</string>
+    <string name="status_starting">Avvio…</string>
+    <string name="status_waiting">In attesa</string>
+    
+    <!-- UI Labels -->
+    <string name="title_video_preview">Anteprima video</string>
+    <string name="title_stream_direction">Direzione del flusso</string>
+    <string name="title_connection_mode">Modalità di connessione</string>
+    <string name="title_logs">Registri</string>
+    <string name="title_connected_device">Dispositivo connesso</string>
+    <string name="title_unknown_device">Dispositivo sconosciuto</string>
+    <string name="label_send">Invia →</string>
+    <string name="label_receive">← Ricevi</string>
+    <string name="label_send_glasses">Invia → (Occhiali)</string>
+    <string name="label_receive_phone">← Ricevi (Telefono)</string>
+    
+    <!-- Buttons -->
+    <string name="btn_stop_streaming">Ferma streaming</string>
+    <string name="btn_connecting">Connessione…</string>
+    <string name="btn_connect_stream">Connetti e trasmetti (%s)</string>
+    <string name="btn_stop_service">Ferma servizio</string>
+    <string name="btn_starting">Avvio…</string>
+    <string name="btn_start_service">Avvia servizio (%s)</string>
+    
+    <!-- Log Messages -->
+    <string name="log_connection_status">Stato connessione: %s</string>
+    <string name="log_disconnect_first_direction">⚠️ Disconnettiti prima di cambiare la direzione del flusso</string>
+    <string name="log_disconnect_first_mode">⚠️ Disconnettiti prima di cambiare la modalità di connessione</string>
+    <string name="log_stop_first_direction">⚠️ Ferma il servizio prima di cambiare la direzione del flusso</string>
+    <string name="log_stop_first_mode">⚠️ Ferma il servizio prima di cambiare la modalità di connessione</string>
+    <string name="log_stream_direction">Direzione del flusso: %s</string>
+    <string name="log_connection_mode">Modalità di connessione: %s</string>
+    <string name="log_error">❌ Errore: %s</string>
+    <string name="log_connecting">🔄 Connessione…</string>
+    <string name="log_connected_to">✅ Connesso a: %s</string>
+    <string name="log_streaming_started">📹 Streaming avviato</string>
+    <string name="log_disconnected">🔌 Disconnesso</string>
+    <string name="log_server_status">Stato del server: %s</string>
+    <string name="log_starting_service">🔄 Avvio del servizio…</string>
+    <string name="log_waiting_connection">⏳ In attesa della connessione del telefono…</string>
+    <string name="log_client_connected">✅ Connesso: %s</string>
+    <string name="log_service_stopped">🔌 Servizio fermato</string>
+    
+    <!-- Permissions -->
+    <string name="error_permissions_required">Sono necessari i permessi Fotocamera e Bluetooth per utilizzare questa app</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_language">Lingua</string>
+    <string name="settings_language_desc">Seleziona la lingua dell\'app</string>
+    <string name="settings_logs">Gestore log</string>
+    <string name="settings_logs_desc">Visualizza ed esporta i log dell\'app</string>
+    <string name="settings_about">Informazioni</string>
+    <string name="settings_version">Versione</string>
+    <string name="current_language">Lingua attuale</string>
+    <string name="language_sync_note">La lingua verrà sincronizzata con gli occhiali alla connessione</string>
+    
+    <!-- Log Manager -->
+    <string name="log_manager_title">Gestore log</string>
+    <string name="log_search">Cerca log…</string>
+    <string name="log_empty">Nessun log disponibile</string>
+    <string name="log_total">Totale</string>
+    <string name="log_filter_all">Mostra tutti</string>
+    <string name="log_delete_title">Elimina log</string>
+    <string name="log_delete_confirm">Sei sicuro di voler eliminare tutti i log?</string>
+    <string name="log_delete_all">Elimina tutti</string>
+    <string name="log_deleted">Log eliminati</string>
+    <string name="log_export_title">Esporta log</string>
+    <string name="cancel">Annulla</string>
+    
+    <!-- Language Names -->
+    <string name="lang_en">English</string>
+    <string name="lang_zh_cn">简体中文</string>
+    <string name="lang_zh_tw">繁體中文</string>
+    <string name="lang_ja">日本語</string>
+    <string name="lang_ko">한국어</string>
+    <string name="lang_vi">Tiếng Việt</string>
+    <string name="lang_th">ไทย</string>
+    <string name="lang_fr">Français</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_system">Predefinito di sistema</string>
+    
+    <!-- Mode Selection -->
+    <string name="select_stream_mode">Seleziona modalità streaming</string>
+    <string name="mode_phone_to_glasses">Telefono a Occhiali</string>
+    <string name="mode_phone_to_glasses_desc">Invia la fotocamera del telefono al display degli occhiali</string>
+    <string name="mode_glasses_to_phone">Occhiali a Telefono</string>
+    <string name="mode_glasses_to_phone_desc">Invia la fotocamera degli occhiali al display del telefono</string>
+    <string name="mode_bidirectional">Bidirezionale</string>
+    <string name="mode_bidirectional_desc">Streaming bidirezionale simultaneo</string>
+    
+    <!-- Transport Mode -->
+    <string name="transport_mode_title">Modalità di trasporto</string>
+    <string name="transport_mode_desc">Seleziona come trasmettere il video tra i dispositivi</string>
+    <string name="transport_mode_short">Trasporto</string>
+    <string name="transport_ble_l2cap">BLE L2CAP</string>
+    <string name="transport_ble_l2cap_desc">Streaming Bluetooth a bassa latenza</string>
+    <string name="transport_rokid_ble">Rokid Bluetooth</string>
+    <string name="transport_rokid_ble_desc">Ottimizzato per occhiali Rokid AR</string>
+    <string name="transport_wifi">WiFi TCP</string>
+    <string name="transport_wifi_desc">Streaming WiFi ad alta larghezza di banda</string>
+    
+    <!-- Short Labels -->
+    <string name="logs_short">Registri</string>
+    <string name="language_short">Lingua</string>
+    <string name="close">Chiudi</string>
+</resources>
