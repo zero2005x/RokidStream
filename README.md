@@ -1,278 +1,381 @@
 # RokidStream
 
-A real-time video streaming solution over Bluetooth Low Energy (BLE) L2CAP channel, designed for streaming camera feeds to Rokid AR glasses or similar devices.
+<p align="center">
+  <strong>Real-time Video Streaming Between Phone and Rokid AR Glasses</strong>
+</p>
 
-## Overview
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Android-brightgreen.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Kotlin-2.0.21-blueviolet.svg" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Min%20SDK-29-blue.svg" alt="Min SDK">
+  <img src="https://img.shields.io/badge/Target%20SDK-34-blue.svg" alt="Target SDK">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+</p>
 
-RokidStream consists of two Android applications:
+<p align="center">
+  <a href="doc/zh-TW/README.md">繁體中文</a>
+</p>
 
-- **Sender** - Captures camera video, encodes it as H.264, and streams over BLE
-- **Receiver** - Receives the H.264 stream, decodes, and displays on screen
+---
 
-The project uses BLE GATT for connection setup and L2CAP channels for high-bandwidth video data transfer, providing a low-latency streaming solution without requiring Wi-Fi or traditional Bluetooth pairing.
+## Background & Purpose
 
-## Architecture
+RokidStream enables **bidirectional real-time H.264 video streaming** between Android phones and Rokid AR glasses via BLE L2CAP or WiFi TCP. Designed for low-latency AR applications where phone camera feeds need to be displayed on glasses, or glasses camera feeds need to be viewed on phone.
 
+### Scope
+
+| In Scope                        | Out of Scope            |
+| ------------------------------- | ----------------------- |
+| Phone ↔ Glasses video streaming | Audio streaming         |
+| BLE L2CAP / WiFi TCP transport  | Cloud relay / WebRTC    |
+| H.264 Baseline encoding         | HEVC / VP9 codecs       |
+| Rokid AR glasses (CXR-M SDK)    | Other AR glasses brands |
+
+---
+
+## ⚡ Quick Start (5 minutes)
+
+### Prerequisites
+
+| Tool           | Version     | Check Command   |
+| -------------- | ----------- | --------------- |
+| Android Studio | Arctic Fox+ | `Help > About`  |
+| JDK            | 17+         | `java -version` |
+| Android SDK    | API 29+     | SDK Manager     |
+
+### Build & Run
+
+```bash
+# 1. Clone
+git clone https://github.com/your-org/RokidStream.git
+cd RokidStream
+
+# 2. Build both apps (debug)
+./gradlew assembleDebug
+
+# 3. Install phone app (connect phone via USB)
+adb -s <PHONE_SERIAL> install phone-app/build/outputs/apk/debug/phone-app-debug.apk
+
+# 4. Install glasses app (connect glasses via USB)
+adb -s <GLASSES_SERIAL> install glasses-app/build/outputs/apk/debug/glasses-app-debug.apk
 ```
-┌─────────────────┐         BLE L2CAP          ┌─────────────────┐
-│     Sender      │ ─────────────────────────► │    Receiver     │
-│   (Phone/PC)    │                            │  (AR Glasses)   │
-└─────────────────┘                            └─────────────────┘
-        │                                              │
-   ┌────┴────┐                                   ┌─────┴─────┐
-   │ Camera  │                                   │ SurfaceView│
-   │ CameraX │                                   │  Display   │
-   └────┬────┘                                   └─────┬─────┘
-        │                                              │
-   ┌────┴────┐                                   ┌─────┴─────┐
-   │ H.264   │                                   │  H.264    │
-   │ Encoder │                                   │  Decoder  │
-   └────┬────┘                                   └─────┬─────┘
-        │                                              │
-   ┌────┴────────────┐                          ┌──────┴──────────┐
-   │ Frame Queue     │                          │ Frame Reader    │
-   │ (10 frames max) │                          │ (length-prefix) │
-   └────┬────────────┘                          └──────┬──────────┘
-        │                                              │
-   ┌────┴────────────────────────────────────────────┴────┐
-   │                  BLE L2CAP Channel                    │
-   │           (Reliable, Connection-Oriented)             │
-   └───────────────────────────────────────────────────────┘
-```
 
-## Features
+> **Tip**: Use `adb devices` to list connected devices and get serial numbers.
 
-- **Real-time H.264 Video Streaming** - Hardware-accelerated encoding/decoding
-- **BLE L2CAP Transport** - High-bandwidth, connection-oriented channel
-- **GATT Service Discovery** - Automatic PSM negotiation for L2CAP
-- **Frame Rate Control** - Configurable FPS (default: 10 FPS)
-- **Adaptive Bitrate** - 300 Kbps optimized for BLE bandwidth
-- **Frame Dropping** - Graceful degradation under network congestion
-- **LZ4 Compression Support** - Optional compression library included
-- **CameraX Integration** - Modern camera API with lifecycle awareness
+### First Run
 
-## Requirements
+1. **Phone App**: Launch → Select "Phone → Glasses" → Select "BLE L2CAP" → Tap Connect
+2. **Glasses App**: Launch → App auto-scans → Select phone from list
+3. Video streaming starts automatically after connection
 
-### Hardware
+---
 
-- **Sender Device**: Android phone with Bluetooth 5.0+ and Camera
-- **Receiver Device**: Android device with Bluetooth 5.0+ (e.g., Rokid glasses)
-
-### Software
-
-- Android SDK 29+ (Android 10)
-- Target SDK 34 (Android 14)
-- Kotlin 1.9.0
-- Gradle 8.3.0
-
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 RokidStream/
-├── sender/                     # Sender application
-│   ├── src/main/
-│   │   ├── java/com/rokid/stream/sender/
-│   │   │   └── MainActivity.kt    # Camera capture & BLE streaming
-│   │   ├── res/layout/
-│   │   │   └── activity_main.xml  # Camera preview & connect UI
-│   │   └── AndroidManifest.xml
-│   └── build.gradle.kts
-│
-├── receiver/                   # Receiver application
-│   ├── src/main/
-│   │   ├── java/com/rokid/stream/receiver/
-│   │   │   └── MainActivity.kt    # BLE server & video decoder
-│   │   ├── res/layout/
-│   │   │   └── activity_main.xml  # Full-screen video display
-│   │   └── AndroidManifest.xml
-│   └── build.gradle.kts
-│
+├── phone-app/                    # Phone application (Sender)
+│   └── src/main/java/.../sender/
+│       ├── MainActivity.kt       # Legacy entry
+│       ├── streaming/            # Streaming Activities
+│       ├── core/                 # ConnectionManager, VideoEncoder/Decoder
+│       ├── ble/                  # BLE Advertiser
+│       ├── ui/                   # Compose screens, Settings
+│       └── util/                 # Locale, Logging
+├── glasses-app/                  # Glasses application (Receiver)
+│   └── src/main/java/.../receiver/
+│       ├── MainActivity.kt       # Legacy entry
+│       ├── ui/                   # GlassesScannerActivity, Compose screens
+│       ├── core/                 # VideoEncoder
+│       └── util/                 # Locale, Logging
+├── sender/                       # Shared sender module
+├── receiver/                     # Shared receiver module
 ├── gradle/
-│   └── libs.versions.toml      # Version catalog
-├── build.gradle.kts            # Root build file
-└── settings.gradle.kts         # Project settings
+│   └── libs.versions.toml        # Version catalog
+└── doc/                          # Documentation
 ```
 
-## Installation
+### Module Overview
 
-### Building from Source
+| Module        | Package                     | Description                                                                    |
+| ------------- | --------------------------- | ------------------------------------------------------------------------------ |
+| `phone-app`   | `com.rokid.stream.sender`   | Main phone app, can send or receive video                                      |
+| `glasses-app` | `com.rokid.stream.receiver` | Glasses app, typically receives video (targetSdk=32 for glasses compatibility) |
 
-1. Clone the repository:
+### Key Components
 
-   ```bash
-   git clone https://github.com/zero2005x/RokidStream.git
-   cd RokidStream
-   ```
+| Class                    | Location                   | Purpose                                  |
+| ------------------------ | -------------------------- | ---------------------------------------- |
+| `ConnectionManager`      | `phone-app/.../core/`      | BLE L2CAP scanning, connection, I/O      |
+| `VideoEncoder`           | `phone-app/.../core/`      | H.264 encoding (240×240, 100Kbps, 10FPS) |
+| `VideoDecoder`           | `phone-app/.../core/`      | H.264 decoding to Surface                |
+| `WiFiStreamManager`      | `phone-app/`               | mDNS discovery + TCP streaming           |
+| `ModeSelectionActivity`  | `phone-app/.../streaming/` | Main entry, mode selection               |
+| `GlassesScannerActivity` | `glasses-app/.../ui/`      | Glasses main entry, device scanning      |
 
-2. Open the project in Android Studio.
+---
 
-3. Build and install the Sender app on your phone:
+## 🔨 Build Configuration
 
-   ```bash
-   ./gradlew :sender:installDebug
-   ```
+### Gradle Versions
 
-4. Build and install the Receiver app on AR glasses:
-   ```bash
-   ./gradlew :receiver:installDebug
-   ```
+| Tool   | Version |
+| ------ | ------- |
+| AGP    | 8.3.0   |
+| Kotlin | 2.0.21  |
+| Gradle | 8.x     |
+| JDK    | 17      |
 
-### Pre-built APKs
+### SDK Configuration
 
-Download the latest APKs from the [Releases](https://github.com/zero2005x/RokidStream/releases) page.
+| Config        | phone-app | glasses-app |
+| ------------- | --------- | ----------- |
+| `compileSdk`  | 34        | 34          |
+| `minSdk`      | 29        | 29          |
+| `targetSdk`   | 34        | 32          |
+| `versionCode` | 1         | 1           |
 
-## Usage
-
-### On the Receiver Device (AR Glasses)
-
-1. Launch **Rokid Receiver** app
-2. The app will automatically:
-   - Start a GATT server
-   - Open an L2CAP server socket
-   - Begin BLE advertising
-3. Wait for a connection from the sender
-
-### On the Sender Device (Phone)
-
-1. Launch **Rokid Sender** app
-2. Grant camera and Bluetooth permissions when prompted
-3. Tap **"Connect & Stream Video"** button
-4. The app will:
-   - Scan for Rokid Receiver
-   - Connect via GATT and read PSM
-   - Establish L2CAP connection
-   - Start streaming camera video
-
-## Configuration
-
-### Video Parameters (Sender)
-
-| Parameter        | Value    | Location                      |
-| ---------------- | -------- | ----------------------------- |
-| Resolution       | 720x720  | `VIDEO_WIDTH`, `VIDEO_HEIGHT` |
-| Bitrate          | 300 Kbps | `VIDEO_BITRATE`               |
-| Frame Rate       | 10 FPS   | `VIDEO_FRAME_RATE`            |
-| I-Frame Interval | 1 second | `VIDEO_I_FRAME_INTERVAL`      |
-| Encoder Profile  | Baseline | `AVCProfileBaseline`          |
-
-### BLE UUIDs
-
-| UUID                                   | Purpose            |
-| -------------------------------------- | ------------------ |
-| `6e400001-b5a3-f393-e0a9-e50e24dcca9e` | Service UUID       |
-| `6e400002-b5a3-f393-e0a9-e50e24dcca9e` | PSM Characteristic |
-
-## Protocol
-
-### Frame Format
-
-Each video frame is transmitted with a simple length-prefix protocol:
-
-```
-┌─────────────────┬──────────────────────┐
-│ Length (4 bytes)│ H.264 NAL Unit Data  │
-│ Little-Endian   │ (variable length)    │
-└─────────────────┴──────────────────────┘
-```
-
-### Connection Flow
-
-1. **Receiver** starts GATT server and advertises service
-2. **Sender** scans and discovers receiver by Service UUID
-3. **Sender** connects GATT and reads PSM characteristic
-4. **Sender** establishes L2CAP channel using PSM
-5. **Sender** streams H.264 frames over L2CAP
-6. **Receiver** decodes and renders frames
-
-## Permissions
-
-### Sender App
-
-- `BLUETOOTH_SCAN` - Scan for BLE devices
-- `BLUETOOTH_CONNECT` - Connect to BLE devices
-- `ACCESS_FINE_LOCATION` - Required for BLE scanning
-- `CAMERA` - Capture video frames
-- `FOREGROUND_SERVICE` - Background streaming (optional)
-
-### Receiver App
-
-- `BLUETOOTH_ADVERTISE` - Advertise BLE service
-- `BLUETOOTH_CONNECT` - Accept BLE connections
-
-## Troubleshooting
-
-### Common Issues
-
-**"Scan Failed" Error**
-
-- Ensure Bluetooth is enabled
-- Grant location permission
-- Restart Bluetooth adapter
-
-**"L2CAP Connection Failed"**
-
-- Ensure receiver is advertising
-- Check if PSM value is valid
-- Try restarting both apps
-
-**Black Screen on Receiver**
-
-- Wait for keyframe (I-frame)
-- Check codec config (SPS/PPS) transmission
-- Verify decoder initialization
-
-**Low Frame Rate**
-
-- Normal due to BLE bandwidth limits
-- Consider reducing resolution
-- Check for interference
-
-### Debugging
-
-Both apps log extensively to Logcat:
+### Build Commands
 
 ```bash
-adb logcat -s RokidSender:D RokidReceiver:D
+# Debug builds
+./gradlew :phone-app:assembleDebug
+./gradlew :glasses-app:assembleDebug
+
+# Release builds
+./gradlew :phone-app:assembleRelease
+./gradlew :glasses-app:assembleRelease
+
+# Build all
+./gradlew assembleDebug
+
+# Clean build
+./gradlew clean assembleDebug
 ```
 
-## Dependencies
+### Build Types
 
-| Library               | Version | Purpose                |
-| --------------------- | ------- | ---------------------- |
-| AndroidX Core KTX     | 1.12.0  | Kotlin extensions      |
-| AndroidX AppCompat    | 1.6.1   | UI compatibility       |
-| Material              | 1.11.0  | Material Design        |
-| Lifecycle Runtime KTX | 2.7.0   | Lifecycle awareness    |
-| LZ4 Java              | 1.8.0   | Compression (optional) |
-| CameraX               | 1.3.0   | Camera API (Sender)    |
+| Type      | Minify | ProGuard                | Description             |
+| --------- | ------ | ----------------------- | ----------------------- |
+| `debug`   | ❌     | ❌                      | Development, debuggable |
+| `release` | ❌     | Configured but disabled | Production-ready        |
 
-## Known Limitations
+> **Note**: ProGuard is configured in `proguard-rules.pro` but `isMinifyEnabled = false` by default.
 
-- BLE L2CAP bandwidth is limited (~1 Mbps theoretical)
-- Frame rate limited to ~10 FPS for reliable streaming
-- Requires Android 10+ for L2CAP support
-- One-to-one connection only (no broadcast)
+---
 
-## Contributing
+## 📱 Required Permissions
 
-Contributions are welcome! Please:
+Declared in `AndroidManifest.xml`:
 
-1. Fork the repository
+| Permission             | Purpose               | Runtime Request  |
+| ---------------------- | --------------------- | ---------------- |
+| `CAMERA`               | Video capture         | ✅ Yes           |
+| `BLUETOOTH_SCAN`       | Device discovery      | ✅ Yes (API 31+) |
+| `BLUETOOTH_CONNECT`    | BLE connection        | ✅ Yes (API 31+) |
+| `BLUETOOTH_ADVERTISE`  | BLE advertising       | ✅ Yes (API 31+) |
+| `ACCESS_FINE_LOCATION` | BLE/WiFi scanning     | ✅ Yes           |
+| `NEARBY_WIFI_DEVICES`  | WiFi Direct (API 33+) | ✅ Yes           |
+| `INTERNET`             | Network access        | ❌ No            |
+
+### Adding a New Permission
+
+1. Add to `AndroidManifest.xml`:
+
+   ```xml
+   <uses-permission android:name="android.permission.NEW_PERMISSION" />
+   ```
+
+2. Request at runtime in Activity:
+   ```kotlin
+   // See ModeSelectionActivity.kt for permission request pattern
+   ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.NEW_PERMISSION), REQUEST_CODE)
+   ```
+
+---
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+# Run all unit tests
+./gradlew test
+
+# Run specific module tests
+./gradlew :phone-app:testDebugUnitTest
+./gradlew :glasses-app:testDebugUnitTest
+```
+
+### Instrumented Tests
+
+```bash
+# Run instrumented tests (requires connected device)
+./gradlew connectedAndroidTest
+
+# Specific module
+./gradlew :phone-app:connectedDebugAndroidTest
+```
+
+### Manual Testing Checklist
+
+- [ ] BLE L2CAP: Phone → Glasses streaming
+- [ ] BLE L2CAP: Glasses → Phone streaming
+- [ ] BLE L2CAP: Bidirectional streaming
+- [ ] WiFi TCP: All three modes
+- [ ] Reconnection after disconnect
+- [ ] App backgrounding/foregrounding
+- [ ] Permission denial handling
+
+---
+
+## 🛠️ Common Development Tasks
+
+### Adding a New Screen (Compose)
+
+1. Create Composable in `ui/` folder:
+
+   ```kotlin
+   // phone-app/.../ui/NewScreen.kt
+   @Composable
+   fun NewScreen(viewModel: NewViewModel = viewModel()) {
+       // UI code
+   }
+   ```
+
+2. Create ViewModel:
+
+   ```kotlin
+   // phone-app/.../ui/NewViewModel.kt
+   class NewViewModel : ViewModel() {
+       // State and logic
+   }
+   ```
+
+3. Add navigation in Activity or NavHost
+
+### Adding a New Activity
+
+1. Create Activity class in appropriate package
+2. Register in `AndroidManifest.xml`:
+   ```xml
+   <activity
+       android:name=".package.NewActivity"
+       android:exported="false"
+       android:parentActivityName=".streaming.ModeSelectionActivity" />
+   ```
+
+### Modifying Video Parameters
+
+Edit constants in `VideoEncoder.kt`:
+
+```kotlin
+// phone-app/.../core/VideoEncoder.kt
+const val DEFAULT_WIDTH = 240       // Resolution
+const val DEFAULT_HEIGHT = 240
+const val DEFAULT_BITRATE = 100_000 // 100 Kbps
+const val DEFAULT_FRAME_RATE = 10   // 10 FPS
+const val I_FRAME_INTERVAL = 3      // Keyframe every 3 seconds
+```
+
+---
+
+## ❓ FAQ & Troubleshooting
+
+### Build Issues
+
+<details>
+<summary><b>Gradle sync failed: Could not resolve com.rokid.cxr:client-m</b></summary>
+
+Ensure you have access to Rokid's Maven repository. Check `settings.gradle.kts` for repository configuration:
+
+```kotlin
+maven { url = uri("https://maven.rokid.com/repository/...") }
+```
+
+</details>
+
+<details>
+<summary><b>JDK version mismatch error</b></summary>
+
+Project requires JDK 17. In Android Studio:
+
+- `File > Settings > Build > Gradle > Gradle JDK` → Select JDK 17
+</details>
+
+### Runtime Issues
+
+<details>
+<summary><b>BLE scanning finds no devices</b></summary>
+
+1. Ensure Location permission is granted
+2. Ensure Bluetooth is enabled
+3. Glasses app must be running and advertising
+4. Check if glasses is already connected to another phone
+</details>
+
+<details>
+<summary><b>Video freezes after a few seconds</b></summary>
+
+1. BLE bandwidth limited (~100Kbps) - this is expected for low resolution
+2. Check for `KEY_FRAME_REQUEST` handling
+3. Try WiFi TCP mode for higher bandwidth
+</details>
+
+<details>
+<summary><b>L2CAP connection fails on Android 12+</b></summary>
+
+Ensure `BLUETOOTH_CONNECT` permission is granted (required for API 31+).
+
+</details>
+
+### ProGuard Issues
+
+<details>
+<summary><b>Release build crashes but debug works</b></summary>
+
+Add keep rules in `proguard-rules.pro`:
+
+```proguard
+-keep class com.rokid.** { *; }
+-keep class com.squareup.** { *; }
+```
+
+</details>
+
+---
+
+## 📚 Documentation
+
+| Document                                  | Description                                |
+| ----------------------------------------- | ------------------------------------------ |
+| [Architecture](doc/architecture.md)       | System design, module structure, data flow |
+| [API Reference](doc/api-reference.md)     | Core classes, methods, callbacks           |
+| [Protocol](doc/protocol.md)               | BLE L2CAP / WiFi TCP frame formats         |
+| [Developer Guide](doc/developer-guide.md) | Common dev tasks, debugging, code style    |
+
+### 繁體中文文檔
+
+- [README (繁體中文)](doc/zh-TW/README.md)
+- [系統架構](doc/zh-TW/architecture.md)
+- [API 參考](doc/zh-TW/api-reference.md)
+- [通訊協定](doc/zh-TW/protocol.md)
+- [開發者指南](doc/zh-TW/developer-guide.md)
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## 🤝 Contributing
+
+1. Fork this repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
+## 📞 Contact
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Rokid for inspiring the AR glasses streaming use case
-- Android CameraX team for the modern camera API
-- BLE L2CAP documentation contributors
-
-## Contact
-
-For questions or support, please open an issue on GitHub.
+For questions or suggestions, please contact us via GitHub Issues.
