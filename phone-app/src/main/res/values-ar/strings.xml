@@ -9,7 +9,6 @@
     <!-- Stream Direction -->
     <string name="direction_phone_to_glasses">الهاتف ← النظارة</string>
     <string name="direction_glasses_to_phone">النظارة ← الهاتف</string>
-    <string name="direction_bidirectional">ثنائي الاتجاه</string>
     
     <!-- Connection Mode -->
     <string name="mode_l2cap">BLE L2CAP</string>
@@ -118,8 +117,6 @@
     <string name="mode_phone_to_glasses_desc">إرسال كاميرا الهاتف إلى شاشة النظارة</string>
     <string name="mode_glasses_to_phone">النظارة إلى الهاتف</string>
     <string name="mode_glasses_to_phone_desc">إرسال كاميرا النظارة إلى شاشة الهاتف</string>
-    <string name="mode_bidirectional">ثنائي الاتجاه</string>
-    <string name="mode_bidirectional_desc">بث ثنائي الاتجاه متزامن</string>
     
     <!-- Transport Mode -->
     <string name="transport_mode_title">وضع النقل</string>

@@ -60,6 +60,10 @@ class GlassesScannerActivityRefactored : ComponentActivity() {
     
     companion object {
         private const val TAG = "GlassesScanner"
+        
+        // Codec MIME types for H.265/H.264 support
+        private const val MIME_TYPE_HEVC = MediaFormat.MIMETYPE_VIDEO_HEVC  // "video/hevc"
+        private const val MIME_TYPE_AVC = MediaFormat.MIMETYPE_VIDEO_AVC    // "video/avc"
     }
     
     // ViewModel (using AndroidX ViewModel)
@@ -76,6 +80,9 @@ class GlassesScannerActivityRefactored : ComponentActivity() {
     private var isStreaming = false
     private var framesReceived = 0
     private var framesDecoded = 0
+    
+    // Codec detection for H.265/H.264 auto-detection
+    private var detectedCodecType: String? = null  // Will be set from first frame
     
     // Permission launcher
     private val permissionLauncher = registerForActivityResult(
@@ -280,21 +287,8 @@ class GlassesScannerActivityRefactored : ComponentActivity() {
             return
         }
         
-        // Initialize decoder
-        try {
-            val format = MediaFormat.createVideoFormat(
-                MediaFormat.MIMETYPE_VIDEO_AVC, 
-                GlassesScannerViewModel.VIDEO_WIDTH, 
-                GlassesScannerViewModel.VIDEO_HEIGHT
-            )
-            videoDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            videoDecoder?.configure(format, videoSurface, null, 0)
-            videoDecoder?.start()
-            Log.d(TAG, "Video decoder started")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize decoder", e)
-            return
-        }
+        // Reset codec detection for new stream (decoder initialized on first frame)
+        detectedCodecType = null
         
         val headerBuffer = ByteArray(4)
         val frameBuffer = ByteArray(GlassesScannerViewModel.MAX_FRAME_SIZE)
@@ -324,6 +318,41 @@ class GlassesScannerActivityRefactored : ComponentActivity() {
                 }
                 
                 framesReceived++
+                
+                // Initialize decoder on first frame (auto-detect H.264/H.265)
+                if (videoDecoder == null) {
+                    try {
+                        val codecType = detectCodecType(frameBuffer, frameSize)
+                        detectedCodecType = codecType
+                        
+                        val format = MediaFormat.createVideoFormat(
+                            codecType,
+                            GlassesScannerViewModel.VIDEO_WIDTH, 
+                            GlassesScannerViewModel.VIDEO_HEIGHT
+                        )
+                        
+                        // Enable low latency mode (API 30+)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                            format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
+                        }
+                        
+                        // Set realtime priority (API 23+)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                            format.setInteger(MediaFormat.KEY_PRIORITY, 0)  // 0 = realtime
+                        }
+                        
+                        videoDecoder = MediaCodec.createDecoderByType(codecType)
+                        videoDecoder?.configure(format, videoSurface, null, 0)
+                        videoDecoder?.start()
+                        
+                        val codecName = if (codecType == MIME_TYPE_HEVC) "H.265/HEVC" else "H.264/AVC"
+                        Log.d(TAG, "🎬 Video decoder started: $codecName with low latency mode")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to initialize decoder", e)
+                        break
+                    }
+                }
+                
                 decodeFrame(frameBuffer, frameSize)
             }
         } catch (e: IOException) {
@@ -331,6 +360,46 @@ class GlassesScannerActivityRefactored : ComponentActivity() {
         } finally {
             stopDecoder()
         }
+    }
+    
+    /**
+     * Detect codec type from NAL unit header.
+     * H.264: NAL type in bits 0-4 of first byte after start code
+     * H.265: NAL type in bits 1-6 of first byte after start code
+     */
+    private fun detectCodecType(data: ByteArray, size: Int): String {
+        if (size < 5) return MIME_TYPE_AVC  // Default to H.264
+        
+        // Find NAL header byte (after start code)
+        val nalHeaderByte: Int = when {
+            data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                data[2] == 0.toByte() && data[3] == 1.toByte() -> data[4].toInt() and 0xFF
+            data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                data[2] == 1.toByte() -> data[3].toInt() and 0xFF
+            else -> return MIME_TYPE_AVC
+        }
+        
+        // H.264: NAL type in bits 0-4 (& 0x1F)
+        val h264NalType = nalHeaderByte and 0x1F
+        
+        // H.265: NAL type in bits 1-6 (>> 1 & 0x3F)
+        val h265NalType = (nalHeaderByte shr 1) and 0x3F
+        
+        // Check for H.265 NAL types (VPS=32, SPS=33, PPS=34, IDR_W_RADL=19, IDR_N_LP=20, etc.)
+        if (h265NalType in 32..34 || h265NalType in 16..21) {
+            Log.d(TAG, "🔍 Detected H.265/HEVC stream (NAL type=$h265NalType)")
+            return MIME_TYPE_HEVC
+        }
+        
+        // Check for H.264 NAL types (SPS=7, PPS=8, IDR=5, non-IDR=1)
+        if (h264NalType in listOf(7, 8, 5, 1, 6, 9)) {
+            Log.d(TAG, "🔍 Detected H.264/AVC stream (NAL type=$h264NalType)")
+            return MIME_TYPE_AVC
+        }
+        
+        // Default to H.264
+        Log.d(TAG, "🔍 Unknown NAL type, defaulting to H.264/AVC")
+        return MIME_TYPE_AVC
     }
     
     private fun decodeFrame(data: ByteArray, size: Int) {

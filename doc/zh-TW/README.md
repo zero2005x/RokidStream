@@ -20,7 +20,7 @@
 
 ## 背景與目的
 
-RokidStream 實現 Android 手機與 Rokid AR 眼鏡之間的**雙向即時 H.264 視訊串流**，透過 BLE L2CAP 或 WiFi TCP 傳輸。專為低延遲 AR 應用設計，可將手機相機畫面顯示在眼鏡上，或將眼鏡相機畫面傳回手機。
+RokidStream 實現 Android 手機與 Rokid AR 眼鏡之間的**即時 H.264 視訊串流**，透過 BLE L2CAP 或 WiFi TCP 傳輸。專為低延遲 AR 應用設計，可將手機相機畫面顯示在眼鏡上，或將眼鏡相機畫面傳回手機。
 
 ### 範圍定義
 
@@ -221,8 +221,7 @@ RokidStream/
 
 - [ ] BLE L2CAP：手機 → 眼鏡串流
 - [ ] BLE L2CAP：眼鏡 → 手機串流
-- [ ] BLE L2CAP：雙向串流
-- [ ] WiFi TCP：三種模式
+- [ ] WiFi TCP：兩種模式
 - [ ] 斷線後重連
 - [ ] App 背景/前景切換
 - [ ] 權限拒絕處理

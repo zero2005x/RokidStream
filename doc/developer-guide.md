@@ -78,8 +78,7 @@ phone-app/
 │   │   ├── streaming/
 │   │   │   ├── ModeSelectionActivity.kt   # ⭐ Main entry point
 │   │   │   ├── PhoneToGlassesActivity.kt  # Phone→Glasses streaming
-│   │   │   ├── GlassesToPhoneActivity.kt  # Glasses→Phone streaming
-│   │   │   └── BidirectionalActivity.kt   # Bidirectional streaming
+│   │   │   └── GlassesToPhoneActivity.kt  # Glasses→Phone streaming
 │   │   ├── core/
 │   │   │   ├── ConnectionManager.kt       # ⭐ BLE L2CAP logic
 │   │   │   ├── VideoEncoder.kt            # ⭐ H.264 encoding

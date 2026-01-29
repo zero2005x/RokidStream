@@ -9,8 +9,7 @@
     <!-- Stream Direction -->
     <string name="direction_phone_to_glasses">Phone → Glasses</string>
     <string name="direction_glasses_to_phone">Glasses → Phone</string>
-    <string name="direction_bidirectional">Bidirectional</string>
-    
+
     <!-- Connection Mode -->
     <string name="mode_l2cap">BLE L2CAP</string>
     <string name="mode_l2cap_desc">Low latency Bluetooth</string>

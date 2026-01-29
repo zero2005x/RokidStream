@@ -21,8 +21,9 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import android.media.MediaCodec
-import android.media.MediaFormat
 import android.media.MediaCodecInfo
+import android.media.MediaCodecList
+import android.media.MediaFormat
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -31,7 +32,7 @@ import com.rokid.stream.sender.ble.BleAdvertiser
 import com.rokid.stream.sender.util.LocaleManager
 
 /**
- * MainActivity - Bidirectional Sender application for streaming camera video
+ * MainActivity - Legacy Sender application for streaming camera video
  * 
  * This app supports two connection modes:
  * 1. BLE L2CAP - Direct Bluetooth Low Energy connection
@@ -40,6 +41,9 @@ import com.rokid.stream.sender.util.LocaleManager
  * Features:
  * - Captures camera frames, encodes them as H.264 video, and transmits to receiver (glasses)
  * - Receives H.264 video from receiver (glasses camera) and displays on SurfaceView
+ * 
+ * Note: This is a legacy activity kept for backwards compatibility.
+ * Use ModeSelectionActivity for the current implementation.
  */
 class MainActivity : AppCompatActivity() {
     
@@ -71,7 +75,7 @@ class MainActivity : AppCompatActivity() {
     private var connectionMode = ConnectionMode.L2CAP
     
     // Stream direction enum
-    private enum class StreamDirection { PHONE_TO_GLASSES, GLASSES_TO_PHONE, BIDIRECTIONAL }
+    private enum class StreamDirection { PHONE_TO_GLASSES, GLASSES_TO_PHONE }
     private var streamDirection = StreamDirection.PHONE_TO_GLASSES
     private lateinit var rgStreamDirection: RadioGroup
     
@@ -138,8 +142,56 @@ class MainActivity : AppCompatActivity() {
         const val ENCODER_TIMEOUT_US = 1000L  // 1ms encoder timeout
         const val MAX_PENDING_FRAMES = 2  // Minimal buffer to reduce latency
         
+        // HEVC (H.265) support constants
+        const val MIME_TYPE_HEVC = MediaFormat.MIMETYPE_VIDEO_HEVC  // "video/hevc"
+        const val MIME_TYPE_AVC = MediaFormat.MIMETYPE_VIDEO_AVC   // "video/avc"
+        const val HEVC_BITRATE_FACTOR = 0.7f  // 30% bitrate reduction for HEVC (same quality)
+        
+        // Reverse stream (glasses -> phone) video dimensions
+        // MUST match glasses-app VIDEO_WIDTH/HEIGHT (240x240) for proper decoding
+        const val REVERSE_VIDEO_WIDTH = 240
+        const val REVERSE_VIDEO_HEIGHT = 240
+        
         // Permission request codes
         const val PERMISSION_REQUEST_BLUETOOTH_CONNECT = 100
+        
+        /**
+         * Check if device supports hardware H.265 (HEVC) encoding.
+         * Only checks for hardware encoders (not software) for optimal performance.
+         * MediaTek Dimensity 920 and similar chips should support hardware HEVC.
+         */
+        @JvmStatic
+        fun isH265Supported(): Boolean {
+            return try {
+                val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+                for (codecInfo in codecList.codecInfos) {
+                    if (!codecInfo.isEncoder) continue
+                    
+                    for (type in codecInfo.supportedTypes) {
+                        if (type.equals(MIME_TYPE_HEVC, ignoreCase = true)) {
+                            // Check if this is a hardware encoder (not software)
+                            val isHardware = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                                codecInfo.isHardwareAccelerated
+                            } else {
+                                // Heuristic: software codecs usually contain "OMX.google" or "c2.android"
+                                val name = codecInfo.name.lowercase()
+                                !name.contains("google") && !name.contains("c2.android")
+                            }
+                            
+                            if (isHardware) {
+                                Log.d(TAG, "✅ Hardware HEVC encoder found: ${codecInfo.name}")
+                                return true
+                            }
+                        }
+                    }
+                }
+                Log.d(TAG, "❌ No hardware HEVC encoder found, will use H.264")
+                false
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking HEVC support: ${e.message}")
+                false
+            }
+        }
     }
     
     // PSM values read from GATT
@@ -197,13 +249,11 @@ class MainActivity : AppCompatActivity() {
             streamDirection = when (checkedId) {
                 R.id.rb_phone_to_glasses -> StreamDirection.PHONE_TO_GLASSES
                 R.id.rb_glasses_to_phone -> StreamDirection.GLASSES_TO_PHONE
-                R.id.rb_bidirectional -> StreamDirection.BIDIRECTIONAL
                 else -> StreamDirection.PHONE_TO_GLASSES
             }
             val directionName = when (streamDirection) {
-                StreamDirection.PHONE_TO_GLASSES -> "手機→眼鏡"
-                StreamDirection.GLASSES_TO_PHONE -> "眼鏡→手機"
-                StreamDirection.BIDIRECTIONAL -> "雙向"
+                StreamDirection.PHONE_TO_GLASSES -> "Phone→Glasses"
+                StreamDirection.GLASSES_TO_PHONE -> "Glasses→Phone"
             }
             log("Stream direction: $directionName")
             
@@ -211,7 +261,6 @@ class MainActivity : AppCompatActivity() {
             bleAdvertiser?.streamDirection = when (streamDirection) {
                 StreamDirection.PHONE_TO_GLASSES -> BleAdvertiser.StreamDirectionType.PHONE_TO_GLASSES
                 StreamDirection.GLASSES_TO_PHONE -> BleAdvertiser.StreamDirectionType.GLASSES_TO_PHONE
-                StreamDirection.BIDIRECTIONAL -> BleAdvertiser.StreamDirectionType.BIDIRECTIONAL
             }
         }
         
@@ -696,7 +745,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     /**
-     * Connects to the receiver via L2CAP channels for bidirectional video streaming
+     * Connects to the receiver via L2CAP channels for video streaming
      * L2CAP provides a reliable, connection-oriented channel over BLE
      */
     private fun connectL2cap(device: BluetoothDevice, sendPsm: Int, receivePsm: Int?) {
@@ -937,69 +986,155 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Track which codec is currently active
+    @Volatile
+    private var activeCodecType: String = MIME_TYPE_AVC
+    
     /**
-     * Initializes the H.264 video encoder with appropriate settings for Bluetooth streaming
+     * Initializes video encoder with H.265 (HEVC) as primary codec, H.264 as fallback.
+     * 
+     * HEVC provides ~30-40% better compression at the same quality, reducing bandwidth
+     * usage on BLE L2CAP while maintaining visual quality.
+     * 
+     * @param width Video frame width
+     * @param height Video frame height
+     * @return Configured MediaCodec encoder, or null if initialization fails
      */
     private fun initializeEncoder(width: Int, height: Int): MediaCodec? {
+        // Try H.265 (HEVC) first if device supports hardware encoding
+        if (isH265Supported()) {
+            val hevcEncoder = tryInitializeEncoder(width, height, MIME_TYPE_HEVC)
+            if (hevcEncoder != null) {
+                return hevcEncoder
+            }
+            log("⚠️ H.265 initialization failed, falling back to H.264")
+        }
+        
+        // Fallback to H.264 (AVC)
+        return tryInitializeEncoder(width, height, MIME_TYPE_AVC)
+    }
+    
+    /**
+     * Attempts to initialize encoder with specified MIME type.
+     * Includes all low-latency optimizations and MediaTek-specific configurations.
+     * 
+     * @param width Video frame width
+     * @param height Video frame height  
+     * @param mimeType MIME_TYPE_HEVC or MIME_TYPE_AVC
+     * @return Configured MediaCodec encoder, or null if initialization fails
+     */
+    private fun tryInitializeEncoder(width: Int, height: Int, mimeType: String): MediaCodec? {
         try {
-            log("Initializing H.264 encoder: ${width}x${height}")
+            val isHevc = mimeType == MIME_TYPE_HEVC
+            val codecName = if (isHevc) "H.265 (HEVC)" else "H.264 (AVC)"
+            log("Initializing $codecName encoder: ${width}x${height}")
             
-            val encoder = MediaCodec.createEncoderByType("video/avc")
-            val format = MediaFormat.createVideoFormat("video/avc", width, height)
+            val encoder = MediaCodec.createEncoderByType(mimeType)
+            val format = MediaFormat.createVideoFormat(mimeType, width, height)
             
             // Configure encoder format
             format.setInteger(
                 MediaFormat.KEY_COLOR_FORMAT,
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar
             )
-            format.setInteger(MediaFormat.KEY_BIT_RATE, VIDEO_BITRATE)
+            
+            // === BITRATE CONFIGURATION ===
+            // HEVC is ~30-40% more efficient, so reduce bitrate to save bandwidth
+            // Same visual quality at lower bitrate
+            val effectiveBitrate = if (isHevc) {
+                (VIDEO_BITRATE * HEVC_BITRATE_FACTOR).toInt()
+            } else {
+                VIDEO_BITRATE
+            }
+            format.setInteger(MediaFormat.KEY_BIT_RATE, effectiveBitrate)
+            log("📊 Bitrate: $effectiveBitrate bps ($codecName)")
+            
             format.setInteger(MediaFormat.KEY_FRAME_RATE, VIDEO_FRAME_RATE)
             format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, VIDEO_I_FRAME_INTERVAL)
             
-            // Set encoder profile for better compatibility
-            format.setInteger(
-                MediaFormat.KEY_PROFILE,
-                MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
-            )
-            format.setInteger(
-                MediaFormat.KEY_LEVEL,
-                MediaCodecInfo.CodecProfileLevel.AVCLevel31
-            )
+            // === CODEC PROFILE CONFIGURATION ===
+            if (isHevc) {
+                // HEVC Main Profile - widely supported, good compression
+                format.setInteger(
+                    MediaFormat.KEY_PROFILE,
+                    MediaCodecInfo.CodecProfileLevel.HEVCProfileMain
+                )
+                format.setInteger(
+                    MediaFormat.KEY_LEVEL,
+                    MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel31
+                )
+            } else {
+                // AVC Baseline Profile - maximum compatibility
+                format.setInteger(
+                    MediaFormat.KEY_PROFILE,
+                    MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+                )
+                format.setInteger(
+                    MediaFormat.KEY_LEVEL,
+                    MediaCodecInfo.CodecProfileLevel.AVCLevel31
+                )
+            }
             
             // === LOW LATENCY OPTIMIZATIONS ===
+            // Critical for real-time streaming to AR glasses
             
             // Enable low latency mode if supported (API 30+)
+            // This is the most important flag for reducing encoding delay
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
                 format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
+                log("🚀 Low latency mode enabled (API 30+)")
             }
             
             // Disable B-frames for zero reordering delay
+            // B-frames require future frames, adding significant latency
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 format.setInteger(MediaFormat.KEY_MAX_B_FRAMES, 0)
             }
             
-            // Set real-time priority
+            // Set real-time priority (0 = realtime, 1 = non-realtime)
+            // Tells encoder to prioritize speed over power efficiency
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 format.setInteger(MediaFormat.KEY_PRIORITY, 0)  // 0 = realtime
             }
             
             // Set CBR (Constant Bit Rate) mode for consistent streaming
-            format.setInteger(MediaFormat.KEY_BITRATE_MODE, 
-                MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
+            // VBR can cause bitrate spikes that overwhelm BLE L2CAP
+            format.setInteger(
+                MediaFormat.KEY_BITRATE_MODE,
+                MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+            )
             
             // Reduce complexity for faster encoding
-            format.setInteger(MediaFormat.KEY_COMPLEXITY, 0)  // Minimum complexity
-
+            // 0 = minimum complexity = fastest encoding
+            format.setInteger(MediaFormat.KEY_COMPLEXITY, 0)
+            
+            // === MEDIATEK-SPECIFIC OPTIMIZATIONS ===
+            // MediaTek chips (Dimensity series) may buffer frames for analysis
+            // These vendor-specific keys help reduce that buffering
+            try {
+                // Prepend SPS/PPS (H.264) or VPS/SPS/PPS (H.265) to each IDR frame
+                // This helps decoder recover faster from packet loss
+                format.setInteger("prepend-sps-pps-to-idr-frames", 1)
+            } catch (e: Exception) {
+                // Ignore if not supported
+            }
+            
             encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             encoder.start()
             
-            log("Encoder initialized successfully")
+            activeCodecType = mimeType
+            log("✅ $codecName encoder initialized successfully")
             return encoder
         } catch (e: Exception) {
-            log("Encoder initialization failed: ${e.message}")
+            log("❌ Encoder initialization failed ($mimeType): ${e.message}")
             return null
         }
     }
+    
+    /**
+     * Check if currently using H.265 (HEVC) codec
+     */
+    fun isUsingHevc(): Boolean = activeCodecType == MIME_TYPE_HEVC
 
     /**
      * Converts YUV_420_888 format to NV12 (YUV420 semi-planar) format
@@ -1423,16 +1558,16 @@ class MainActivity : AppCompatActivity() {
                 }
                 
                 if (currentSurface == null || !surfaceValid) {
-                    if (isReverseCodecConfig(frameData)) {
-                        codecConfigData = frameData.copyOf()
+                    if (reverseStartsWithCodecConfig(frameData)) {
+                        codecConfigData = extractReverseCodecConfig(frameData)
                     }
                     continue
                 }
                 
                 // Initialize decoder if needed
                 if (decoder == null && currentSurface != null) {
-                    if (isReverseCodecConfig(frameData)) {
-                        codecConfigData = frameData.copyOf()
+                    if (reverseStartsWithCodecConfig(frameData)) {
+                        codecConfigData = extractReverseCodecConfig(frameData)
                     }
                     
                     val configToUse = codecConfigData ?: if (isKeyFrame) frameData else null
@@ -1463,6 +1598,43 @@ class MainActivity : AppCompatActivity() {
     // ===== Reverse Stream Handling (Receiving video from glasses) =====
     
     /**
+     * Detect codec type from frame data.
+     * H.265 starts with VPS (NAL type 32), H.264 starts with SPS (NAL type 7)
+     */
+    private fun detectReverseCodecType(data: ByteArray): String {
+        if (data.size < 5) return MIME_TYPE_AVC
+        
+        // Find NAL start code
+        val startIndex = when {
+            data.size > 4 && data[0] == 0.toByte() && data[1] == 0.toByte() &&
+                    data[2] == 0.toByte() && data[3] == 1.toByte() -> 4
+            data.size > 3 && data[0] == 0.toByte() && data[1] == 0.toByte() &&
+                    data[2] == 1.toByte() -> 3
+            else -> return MIME_TYPE_AVC
+        }
+        
+        if (startIndex >= data.size) return MIME_TYPE_AVC
+        
+        val nalByte = data[startIndex].toInt()
+        
+        // H.265: NAL type is bits 1-6, VPS=32, SPS=33, PPS=34
+        val hevcNalType = (nalByte shr 1) and 0x3F
+        if (hevcNalType in 32..34) {
+            log("🎬 Detected H.265 (HEVC) reverse stream, NAL type=$hevcNalType")
+            return MIME_TYPE_HEVC
+        }
+        
+        // H.264: NAL type is bits 0-4, SPS=7, PPS=8
+        val avcNalType = nalByte and 0x1F
+        if (avcNalType == 7 || avcNalType == 8) {
+            log("🎬 Detected H.264 (AVC) reverse stream, NAL type=$avcNalType")
+            return MIME_TYPE_AVC
+        }
+        
+        return MIME_TYPE_AVC
+    }
+    
+    /**
      * Handles incoming video stream from glasses
      */
     @SuppressLint("MissingPermission")
@@ -1472,7 +1644,8 @@ class MainActivity : AppCompatActivity() {
         framesReceived = 0
         framesDecoded = 0
         
-        val mimeType = "video/avc"
+        // Auto-detect codec type from stream (will be set on first codec config frame)
+        var detectedMimeType: String? = null
         var decoder: MediaCodec? = null
         var currentSurface: Surface? = null
         var currentSurfaceVersion = 0L
@@ -1545,8 +1718,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 
                 if (newSurface == null || !surfaceValid) {
-                    if (isReverseCodecConfig(frameData)) {
-                        codecConfigData = frameData.copyOf()
+                    if (reverseStartsWithCodecConfig(frameData)) {
+                        codecConfigData = extractReverseCodecConfig(frameData)
+                        // Detect codec type from config data
+                        if (detectedMimeType == null) {
+                            detectedMimeType = detectReverseCodecType(frameData)
+                        }
                     }
                     if (decoder != null) {
                         releaseDecoder(decoder)
@@ -1568,10 +1745,17 @@ class MainActivity : AppCompatActivity() {
 
                 // Initialize decoder if needed
                 if (decoder == null && currentSurface != null && surfaceValid) {
-                    if (isReverseCodecConfig(frameData)) {
-                        codecConfigData = frameData.copyOf()
-                        log("Reverse stream codec config: ${frameData.size} bytes")
+                    if (reverseStartsWithCodecConfig(frameData)) {
+                        codecConfigData = extractReverseCodecConfig(frameData)
+                        // Detect codec type from config data
+                        if (detectedMimeType == null) {
+                            detectedMimeType = detectReverseCodecType(frameData)
+                        }
+                        log("Reverse stream codec config: ${codecConfigData?.size ?: 0} bytes (from ${frameData.size} bytes), type=$detectedMimeType")
                     }
+                    
+                    // Default to H.264 if not yet detected
+                    val mimeType = detectedMimeType ?: MIME_TYPE_AVC
                     
                     Thread.sleep(50)
                     
@@ -1639,37 +1823,205 @@ class MainActivity : AppCompatActivity() {
         return true
     }
     
+    /**
+     * Check if frame data is PURE codec config (only VPS/SPS/PPS, no IDR slice)
+     * Returns true ONLY for pure codec config, NOT for keyframes with prepended config.
+     */
     private fun isReverseCodecConfig(data: ByteArray): Boolean {
         if (data.size < 5) return false
         
+        // Check first NAL unit type
+        val firstNalType = getReverseFirstNalType(data)
+        if (firstNalType < 0) return false
+        
+        // Check if first NAL is codec config type
+        val isHevcConfig = firstNalType in 32..34
+        val isAvcConfig = firstNalType == 7 || firstNalType == 8
+        
+        if (!isHevcConfig && !isAvcConfig) return false
+        
+        // Now check if this is PURE codec config (no IDR frame after)
+        // If the data contains an IDR slice, it's a keyframe with prepended config
+        return !reverseContainsIdrSlice(data)
+    }
+    
+    /**
+     * Check if frame data starts with codec config (VPS/SPS/PPS)
+     * Used to detect frames that can initialize the decoder
+     */
+    private fun reverseStartsWithCodecConfig(data: ByteArray): Boolean {
+        if (data.size < 5) return false
+        
+        val firstNalType = getReverseFirstNalType(data)
+        if (firstNalType < 0) return false
+        
+        // Check if first NAL is codec config type
+        return firstNalType in 32..34 || firstNalType == 7 || firstNalType == 8
+    }
+    
+    /**
+     * Get the NAL unit type of the first NAL unit in the data
+     */
+    private fun getReverseFirstNalType(data: ByteArray): Int {
         val startIndex = when {
             data.size > 4 && data[0] == 0.toByte() && data[1] == 0.toByte() && 
                 data[2] == 0.toByte() && data[3] == 1.toByte() -> 4
             data.size > 3 && data[0] == 0.toByte() && data[1] == 0.toByte() && 
                 data[2] == 1.toByte() -> 3
-            else -> 0
+            else -> return -1
         }
         
-        if (startIndex >= data.size) return false
+        if (startIndex >= data.size) return -1
         
-        val nalType = data[startIndex].toInt() and 0x1F
-        return nalType == 7 || nalType == 8
+        val nalByte = data[startIndex].toInt()
+        
+        // For HEVC: NAL type is bits 1-6 of first byte
+        val hevcNalType = (nalByte shr 1) and 0x3F
+        
+        // Heuristic: if HEVC NAL type makes sense (0-40), use HEVC
+        if (hevcNalType in 0..40) {
+            return hevcNalType
+        }
+        
+        // For AVC: NAL type is bits 0-4 of first byte
+        return nalByte and 0x1F
+    }
+    
+    /**
+     * Check if the data contains an IDR slice (keyframe)
+     */
+    private fun reverseContainsIdrSlice(data: ByteArray): Boolean {
+        var i = 0
+        while (i < data.size - 4) {
+            // Look for NAL start code
+            if (data[i] == 0.toByte() && data[i + 1] == 0.toByte()) {
+                val startCodeLen: Int
+                val nalIndex: Int
+                
+                when {
+                    i + 3 < data.size && data[i + 2] == 0.toByte() && data[i + 3] == 1.toByte() -> {
+                        startCodeLen = 4
+                        nalIndex = i + 4
+                    }
+                    data[i + 2] == 1.toByte() -> {
+                        startCodeLen = 3
+                        nalIndex = i + 3
+                    }
+                    else -> {
+                        i++
+                        continue
+                    }
+                }
+                
+                if (nalIndex >= data.size) break
+                
+                val nalByte = data[nalIndex].toInt()
+                
+                // Check for H.265 IDR (NAL types 16-21 = IRAP)
+                val hevcNalType = (nalByte shr 1) and 0x3F
+                if (hevcNalType in 16..21) return true
+                
+                // Check for H.264 IDR (NAL type 5)
+                val avcNalType = nalByte and 0x1F
+                if (avcNalType == 5) return true
+                
+                i += startCodeLen
+            } else {
+                i++
+            }
+        }
+        
+        return false
+    }
+    
+    /**
+     * Extract pure codec config from data (remove IDR slice if present)
+     */
+    private fun extractReverseCodecConfig(data: ByteArray): ByteArray {
+        if (!reverseContainsIdrSlice(data)) {
+            return data
+        }
+        
+        var i = 0
+        var lastConfigEnd = 0
+        
+        while (i < data.size - 4) {
+            // Look for NAL start code
+            if (data[i] == 0.toByte() && data[i + 1] == 0.toByte()) {
+                val startCodeLen: Int
+                val nalIndex: Int
+                
+                when {
+                    i + 3 < data.size && data[i + 2] == 0.toByte() && data[i + 3] == 1.toByte() -> {
+                        startCodeLen = 4
+                        nalIndex = i + 4
+                    }
+                    data[i + 2] == 1.toByte() -> {
+                        startCodeLen = 3
+                        nalIndex = i + 3
+                    }
+                    else -> {
+                        i++
+                        continue
+                    }
+                }
+                
+                if (nalIndex >= data.size) break
+                
+                val nalByte = data[nalIndex].toInt()
+                val hevcNalType = (nalByte shr 1) and 0x3F
+                
+                // If this is config NAL, remember this position
+                if (hevcNalType in 32..34) {
+                    // Continue to find next NAL
+                }
+                // If this is IDR, return data before it
+                else if (hevcNalType in 16..21) {
+                    return data.copyOfRange(0, i)
+                }
+                
+                i += startCodeLen
+            } else {
+                i++
+            }
+        }
+        
+        return data
     }
     
     private fun initializeReverseDecoder(mimeType: String, surface: Surface, configData: ByteArray?): MediaCodec? {
         return try {
-            val decoder = MediaCodec.createDecoderByType(mimeType)
-            val format = MediaFormat.createVideoFormat(mimeType, VIDEO_WIDTH, VIDEO_HEIGHT)
+            val codecName = if (mimeType == MIME_TYPE_HEVC) "H.265 (HEVC)" else "H.264 (AVC)"
+            log("Initializing $codecName reverse decoder: ${REVERSE_VIDEO_WIDTH}x${REVERSE_VIDEO_HEIGHT}")
             
+            val decoder = MediaCodec.createDecoderByType(mimeType)
+            val format = MediaFormat.createVideoFormat(mimeType, REVERSE_VIDEO_WIDTH, REVERSE_VIDEO_HEIGHT)
+            
+            // Extract pure codec config (remove IDR if present)
             configData?.let {
-                format.setByteBuffer("csd-0", ByteBuffer.wrap(it))
+                val pureConfig = extractReverseCodecConfig(it)
+                log("Codec config size: ${pureConfig.size} bytes (original: ${it.size} bytes)")
+                format.setByteBuffer("csd-0", ByteBuffer.wrap(pureConfig))
+            }
+            
+            // === LOW LATENCY OPTIMIZATIONS ===
+            // Enable low latency mode if supported (API 30+)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
+            }
+            
+            // Set real-time priority (0 = realtime)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                format.setInteger(MediaFormat.KEY_PRIORITY, 0)
             }
             
             decoder.configure(format, surface, null, 0)
             decoder.start()
+            
+            log("✅ $codecName reverse decoder initialized successfully")
             decoder
         } catch (e: Exception) {
-            log("Reverse decoder init failed: ${e.message}")
+            log("❌ Reverse decoder init failed: ${e.message}")
             null
         }
     }

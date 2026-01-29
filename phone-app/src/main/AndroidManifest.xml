@@ -63,13 +63,6 @@
             android:parentActivityName=".streaming.ModeSelectionActivity"
             android:screenOrientation="portrait" />
         
-        <!-- Bidirectional streaming -->
-        <activity
-            android:name=".streaming.BidirectionalActivity"
-            android:exported="false"
-            android:parentActivityName=".streaming.ModeSelectionActivity"
-            android:screenOrientation="portrait" />
-        
         <!-- LEGACY: Original MainActivity (kept for backwards compatibility) -->
         <activity
             android:name=".MainActivity"

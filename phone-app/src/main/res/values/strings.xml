@@ -9,7 +9,6 @@
     <!-- Stream Direction -->
     <string name="direction_phone_to_glasses">Phone → Glasses</string>
     <string name="direction_glasses_to_phone">Glasses → Phone</string>
-    <string name="direction_bidirectional">Bidirectional</string>
     
     <!-- Connection Mode -->
     <string name="mode_l2cap">BLE L2CAP</string>
@@ -118,8 +117,6 @@
     <string name="mode_phone_to_glasses_desc">Send phone camera to glasses display</string>
     <string name="mode_glasses_to_phone">Glasses to Phone</string>
     <string name="mode_glasses_to_phone_desc">Send glasses camera to phone display</string>
-    <string name="mode_bidirectional">Bidirectional</string>
-    <string name="mode_bidirectional_desc">Simultaneous two-way streaming</string>
     
     <!-- Transport Mode -->
     <string name="transport_mode_title">Transport Mode</string>

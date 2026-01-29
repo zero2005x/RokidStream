@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Receiver main layout: Bidirectional video streaming -->
+<!-- Receiver main layout: Video streaming -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -87,7 +87,7 @@
             android:id="@+id/log_view"
             android:layout_width="match_parent"
             android:layout_height="80dp"
-            android:text="Initializing receiver (bidirectional)...\nSelect connection mode.\n"
+            android:text="Initializing receiver...\nSelect connection mode.\n"
             android:fontFamily="monospace"
             android:textSize="9sp"
             android:textColor="#CCCCCC"

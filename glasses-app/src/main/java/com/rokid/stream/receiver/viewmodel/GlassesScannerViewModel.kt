@@ -419,7 +419,6 @@ class GlassesScannerViewModel : ViewModel() {
         val directionName = when (settings.streamDirection.toInt()) {
             1 -> "Phone → Glasses"
             2 -> "Glasses → Phone"
-            3 -> "Bidirectional"
             else -> "Unknown"
         }
         

@@ -20,6 +20,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
+import android.media.MediaCodecList
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
@@ -30,7 +31,7 @@ import androidx.camera.view.PreviewView
 import android.widget.RadioGroup
 
 /**
- * MainActivity - Bidirectional Receiver application for Rokid AR glasses
+ * MainActivity - Receiver application for Rokid AR glasses
  * 
  * This app supports two connection modes:
  * 1. BLE L2CAP - Direct Bluetooth Low Energy connection
@@ -53,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var gattServer: BluetoothGattServer? = null
     
-    // L2CAP sockets for bidirectional streaming
+    // L2CAP sockets for streaming
     private var l2capServerSocket: BluetoothServerSocket? = null      // For receiving video FROM phone
     private var l2capSendServerSocket: BluetoothServerSocket? = null  // For sending video TO phone
     
@@ -103,6 +104,48 @@ class MainActivity : AppCompatActivity() {
         
         // Maximum expected frame size (for validation)
         const val MAX_FRAME_SIZE = 1_000_000  // 1MB to handle larger frames
+        
+        // HEVC (H.265) support constants
+        const val MIME_TYPE_HEVC = MediaFormat.MIMETYPE_VIDEO_HEVC  // "video/hevc"
+        const val MIME_TYPE_AVC = MediaFormat.MIMETYPE_VIDEO_AVC   // "video/avc"
+        const val HEVC_BITRATE_FACTOR = 0.7f  // 30% bitrate reduction for HEVC (same quality)
+        
+        /**
+         * Check if device supports hardware H.265 (HEVC) encoding.
+         * Only checks for hardware encoders (not software) for optimal performance.
+         */
+        @JvmStatic
+        fun isH265Supported(): Boolean {
+            return try {
+                val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+                for (codecInfo in codecList.codecInfos) {
+                    if (!codecInfo.isEncoder) continue
+                    
+                    for (type in codecInfo.supportedTypes) {
+                        if (type.equals(MIME_TYPE_HEVC, ignoreCase = true)) {
+                            // Check if this is a hardware encoder (not software)
+                            val isHardware = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                                codecInfo.isHardwareAccelerated
+                            } else {
+                                // Heuristic: software codecs usually contain "OMX.google" or "c2.android"
+                                val name = codecInfo.name.lowercase()
+                                !name.contains("google") && !name.contains("c2.android")
+                            }
+                            
+                            if (isHardware) {
+                                Log.d(TAG, "✅ Hardware HEVC encoder found: ${codecInfo.name}")
+                                return true
+                            }
+                        }
+                    }
+                }
+                Log.d(TAG, "❌ No hardware HEVC encoder found, will use H.264")
+                false
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking HEVC support: ${e.message}")
+                false
+            }
+        }
     }
 
     // L2CAP PSM values assigned by system
@@ -1132,50 +1175,146 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
+    // Track which codec is currently active for reverse streaming
+    @Volatile
+    private var activeCodecType: String = MIME_TYPE_AVC
+    
     /**
-     * Initializes H.264 encoder
+     * Initializes video encoder with H.265 (HEVC) as primary codec, H.264 as fallback.
+     * 
+     * HEVC provides ~30-40% better compression at the same quality, reducing bandwidth
+     * usage on BLE L2CAP while maintaining visual quality.
+     * 
+     * @param width Video frame width
+     * @param height Video frame height
+     * @return Configured MediaCodec encoder, or null if initialization fails
      */
     private fun initializeEncoder(width: Int, height: Int): MediaCodec? {
+        // Try H.265 (HEVC) first if device supports hardware encoding
+        if (isH265Supported()) {
+            val hevcEncoder = tryInitializeEncoder(width, height, MIME_TYPE_HEVC)
+            if (hevcEncoder != null) {
+                return hevcEncoder
+            }
+            log("⚠️ H.265 initialization failed, falling back to H.264")
+        }
+        
+        // Fallback to H.264 (AVC)
+        return tryInitializeEncoder(width, height, MIME_TYPE_AVC)
+    }
+    
+    /**
+     * Attempts to initialize encoder with specified MIME type.
+     * Includes all low-latency optimizations and MediaTek-specific configurations.
+     * 
+     * @param width Video frame width
+     * @param height Video frame height  
+     * @param mimeType MIME_TYPE_HEVC or MIME_TYPE_AVC
+     * @return Configured MediaCodec encoder, or null if initialization fails
+     */
+    private fun tryInitializeEncoder(width: Int, height: Int, mimeType: String): MediaCodec? {
         try {
-            log("Initializing H.264 encoder: ${width}x${height}")
+            val isHevc = mimeType == MIME_TYPE_HEVC
+            val codecName = if (isHevc) "H.265 (HEVC)" else "H.264 (AVC)"
+            log("Initializing $codecName encoder: ${width}x${height}")
             
-            val encoder = MediaCodec.createEncoderByType("video/avc")
-            val format = MediaFormat.createVideoFormat("video/avc", width, height)
+            val encoder = MediaCodec.createEncoderByType(mimeType)
+            val format = MediaFormat.createVideoFormat(mimeType, width, height)
             
             format.setInteger(
                 MediaFormat.KEY_COLOR_FORMAT,
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar
             )
-            format.setInteger(MediaFormat.KEY_BIT_RATE, VIDEO_BITRATE)
+            
+            // === BITRATE CONFIGURATION ===
+            // HEVC is ~30-40% more efficient, so reduce bitrate to save bandwidth
+            val effectiveBitrate = if (isHevc) {
+                (VIDEO_BITRATE * HEVC_BITRATE_FACTOR).toInt()
+            } else {
+                VIDEO_BITRATE
+            }
+            format.setInteger(MediaFormat.KEY_BIT_RATE, effectiveBitrate)
+            log("📊 Bitrate: $effectiveBitrate bps ($codecName)")
+            
             format.setInteger(MediaFormat.KEY_FRAME_RATE, VIDEO_FRAME_RATE)
             format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, VIDEO_I_FRAME_INTERVAL)
             
-            format.setInteger(
-                MediaFormat.KEY_PROFILE,
-                MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
-            )
-            format.setInteger(
-                MediaFormat.KEY_LEVEL,
-                MediaCodecInfo.CodecProfileLevel.AVCLevel31
-            )
-            
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
+            // === CODEC PROFILE CONFIGURATION ===
+            if (isHevc) {
+                // HEVC Main Profile - widely supported, good compression
+                format.setInteger(
+                    MediaFormat.KEY_PROFILE,
+                    MediaCodecInfo.CodecProfileLevel.HEVCProfileMain
+                )
+                format.setInteger(
+                    MediaFormat.KEY_LEVEL,
+                    MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel31
+                )
+            } else {
+                // AVC Baseline Profile - maximum compatibility
+                format.setInteger(
+                    MediaFormat.KEY_PROFILE,
+                    MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+                )
+                format.setInteger(
+                    MediaFormat.KEY_LEVEL,
+                    MediaCodecInfo.CodecProfileLevel.AVCLevel31
+                )
             }
             
-            format.setInteger(MediaFormat.KEY_BITRATE_MODE, 
-                MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
+            // === LOW LATENCY OPTIMIZATIONS ===
+            // Critical for real-time streaming to AR glasses
+            
+            // Enable low latency mode if supported (API 30+)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
+                log("🚀 Low latency mode enabled (API 30+)")
+            }
+            
+            // Disable B-frames for zero reordering delay
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                format.setInteger(MediaFormat.KEY_MAX_B_FRAMES, 0)
+            }
+            
+            // Set real-time priority (0 = realtime)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                format.setInteger(MediaFormat.KEY_PRIORITY, 0)
+            }
+            
+            // Set CBR (Constant Bit Rate) mode for consistent streaming
+            format.setInteger(
+                MediaFormat.KEY_BITRATE_MODE,
+                MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+            )
+            
+            // Reduce complexity for faster encoding
+            format.setInteger(MediaFormat.KEY_COMPLEXITY, 0)
+            
+            // === MEDIATEK-SPECIFIC OPTIMIZATIONS ===
+            // MediaTek chips may buffer frames for analysis - reduce that buffering
+            try {
+                // Prepend SPS/PPS (H.264) or VPS/SPS/PPS (H.265) to each IDR frame
+                format.setInteger("prepend-sps-pps-to-idr-frames", 1)
+            } catch (e: Exception) {
+                // Ignore if not supported
+            }
 
             encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             encoder.start()
             
-            log("Encoder initialized successfully")
+            activeCodecType = mimeType
+            log("✅ $codecName encoder initialized successfully")
             return encoder
         } catch (e: Exception) {
-            log("Encoder initialization failed: ${e.message}")
+            log("❌ Encoder initialization failed ($mimeType): ${e.message}")
             return null
         }
     }
+    
+    /**
+     * Check if currently using H.265 (HEVC) codec
+     */
+    fun isUsingHevc(): Boolean = activeCodecType == MIME_TYPE_HEVC
     
     /**
      * Converts YUV_420_888 to NV12 format
@@ -1265,15 +1404,16 @@ class MainActivity : AppCompatActivity() {
                         val outputBuffer = encoder.getOutputBuffer(outputIndex)
                         if (outputBuffer != null) {
                             if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+                                // VPS/SPS/PPS for H.265, SPS/PPS for H.264
                                 val configData = ByteArray(bufferInfo.size)
                                 outputBuffer.position(bufferInfo.offset)
                                 outputBuffer.get(configData)
                                 spsPpsData = configData
-                                log("Received codec config (SPS/PPS): ${bufferInfo.size} bytes")
+                                log("📦 Received codec config: ${bufferInfo.size} bytes ($activeCodecType)")
                                 
-                                if (!pendingFrames.offer(configData)) {
+                                // CRITICAL: Always send codec config, never drop it
+                                while (!pendingFrames.offer(configData)) {
                                     pendingFrames.poll()
-                                    pendingFrames.offer(configData)
                                 }
                             } else if (bufferInfo.size > 0) {
                                 outputBuffer.position(bufferInfo.offset)
@@ -1283,21 +1423,35 @@ class MainActivity : AppCompatActivity() {
                                 outputBuffer.get(frameData)
                                 
                                 val isKeyFrame = (bufferInfo.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0
+                                
                                 if (isKeyFrame) {
-                                    spsPpsData?.let { sps ->
-                                        if (!pendingFrames.offer(sps)) {
+                                    // Prepend codec config before keyframe for decoder recovery
+                                    spsPpsData?.let { config ->
+                                        val combinedData = ByteArray(config.size + frameData.size)
+                                        System.arraycopy(config, 0, combinedData, 0, config.size)
+                                        System.arraycopy(frameData, 0, combinedData, config.size, frameData.size)
+                                        
+                                        if (!pendingFrames.offer(combinedData)) {
                                             pendingFrames.poll()
-                                            pendingFrames.offer(sps)
+                                            pendingFrames.offer(combinedData)
+                                            droppedFrames++
+                                        }
+                                    } ?: run {
+                                        if (!pendingFrames.offer(frameData)) {
+                                            pendingFrames.poll()
+                                            pendingFrames.offer(frameData)
+                                            droppedFrames++
                                         }
                                     }
-                                }
-                                
-                                if (!pendingFrames.offer(frameData)) {
-                                    pendingFrames.poll()
-                                    pendingFrames.offer(frameData)
-                                    droppedFrames++
-                                    if (droppedFrames % 10 == 0) {
-                                        Log.d(TAG, "Dropped $droppedFrames frames due to slow Bluetooth")
+                                } else {
+                                    // Non-keyframe
+                                    if (!pendingFrames.offer(frameData)) {
+                                        pendingFrames.poll()
+                                        pendingFrames.offer(frameData)
+                                        droppedFrames++
+                                        if (droppedFrames % 10 == 0) {
+                                            Log.d(TAG, "Dropped $droppedFrames frames due to slow Bluetooth")
+                                        }
                                     }
                                 }
                             }

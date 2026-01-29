@@ -28,8 +28,7 @@ import com.rokid.stream.receiver.R
  */
 enum class StreamDirection(val label: String, val icon: ImageVector) {
     PHONE_TO_GLASSES("Phone → Glasses", Icons.Default.PhoneAndroid),
-    GLASSES_TO_PHONE("Glasses → Phone", Icons.Default.Visibility),
-    BIDIRECTIONAL("Bidirectional", Icons.Default.SwapHoriz)
+    GLASSES_TO_PHONE("Glasses → Phone", Icons.Default.Visibility)
 }
 
 /**
@@ -256,8 +255,7 @@ fun VideoPreviewSection(
                         .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (selectedDirection == StreamDirection.PHONE_TO_GLASSES ||
-                        selectedDirection == StreamDirection.BIDIRECTIONAL) {
+                    if (selectedDirection == StreamDirection.PHONE_TO_GLASSES) {
                         receivedVideoView()
                     }
                     
@@ -286,8 +284,7 @@ fun VideoPreviewSection(
                         .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (selectedDirection == StreamDirection.GLASSES_TO_PHONE ||
-                        selectedDirection == StreamDirection.BIDIRECTIONAL) {
+                    if (selectedDirection == StreamDirection.GLASSES_TO_PHONE) {
                         cameraPreview()
                     }
                     

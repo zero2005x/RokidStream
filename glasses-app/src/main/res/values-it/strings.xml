@@ -9,8 +9,7 @@
     <!-- Stream Direction -->
     <string name="direction_phone_to_glasses">Telefono → Occhiali</string>
     <string name="direction_glasses_to_phone">Occhiali → Telefono</string>
-    <string name="direction_bidirectional">Bidirezionale</string>
-    
+
     <!-- Connection Mode -->
     <string name="mode_l2cap">BLE L2CAP</string>
     <string name="mode_l2cap_desc">Bluetooth a bassa latenza</string>

@@ -156,71 +156,6 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Bidirectional Mode -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_bidirectional"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        app:cardElevation="4dp"
-        app:cardCornerRadius="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground">
-        
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="20dp"
-            android:gravity="center_vertical">
-            
-            <TextView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:text="📱"
-                android:textSize="32sp"
-                android:gravity="center" />
-            
-            <TextView
-                android:layout_width="48dp"
-                android:layout_height="wrap_content"
-                android:text="↔"
-                android:textSize="24sp"
-                android:gravity="center"
-                android:textColor="#FF9800" />
-            
-            <TextView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:text="🥽"
-                android:textSize="32sp"
-                android:gravity="center" />
-            
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="16dp">
-                
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/mode_bidirectional"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-                
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/mode_bidirectional_desc"
-                    android:textSize="14sp"
-                    android:alpha="0.7" />
-            </LinearLayout>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
     <!-- Transport Mode Indicator -->
     <LinearLayout
         android:id="@+id/transport_mode_indicator"
@@ -239,7 +174,8 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@android:drawable/stat_sys_data_bluetooth"
-            android:contentDescription="@string/transport_mode_title" />
+            android:contentDescription="@string/transport_mode_title"
+            app:tint="#333333" />
         
         <TextView
             android:id="@+id/text_transport_mode"
@@ -247,7 +183,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="@string/transport_ble_l2cap"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textColor="#333333" />
         
         <TextView
             android:layout_width="wrap_content"
@@ -255,7 +192,7 @@
             android:layout_marginStart="4dp"
             android:text="▼"
             android:textSize="12sp"
-            android:alpha="0.6" />
+            android:textColor="#666666" />
     </LinearLayout>
 
     <!-- Bottom Action Bar -->
@@ -283,13 +220,15 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@android:drawable/ic_menu_preferences"
-                android:contentDescription="@string/settings_title" />
+                android:contentDescription="@string/settings_title"
+                app:tint="#FFFFFF" />
             
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title"
                 android:textSize="12sp"
+                android:textColor="#FFFFFF"
                 android:layout_marginTop="4dp" />
         </LinearLayout>
         
@@ -310,13 +249,15 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@android:drawable/stat_sys_data_bluetooth"
-                android:contentDescription="@string/transport_mode_title" />
+                android:contentDescription="@string/transport_mode_title"
+                app:tint="#FFFFFF" />
             
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/transport_mode_short"
                 android:textSize="12sp"
+                android:textColor="#FFFFFF"
                 android:layout_marginTop="4dp" />
         </LinearLayout>
         
@@ -337,13 +278,15 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@android:drawable/ic_menu_agenda"
-                android:contentDescription="@string/settings_logs" />
+                android:contentDescription="@string/settings_logs"
+                app:tint="#FFFFFF" />
             
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/logs_short"
                 android:textSize="12sp"
+                android:textColor="#FFFFFF"
                 android:layout_marginTop="4dp" />
         </LinearLayout>
         
@@ -364,13 +307,15 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@android:drawable/ic_menu_more"
-                android:contentDescription="@string/settings_language" />
+                android:contentDescription="@string/settings_language"
+                app:tint="#FFFFFF" />
             
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/language_short"
                 android:textSize="12sp"
+                android:textColor="#FFFFFF"
                 android:layout_marginTop="4dp" />
         </LinearLayout>
     </LinearLayout>

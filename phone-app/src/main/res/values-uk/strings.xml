@@ -9,7 +9,6 @@
     <!-- Stream Direction -->
     <string name="direction_phone_to_glasses">Телефон → Окуляри</string>
     <string name="direction_glasses_to_phone">Окуляри → Телефон</string>
-    <string name="direction_bidirectional">Двонаправлена</string>
     
     <!-- Connection Mode -->
     <string name="mode_l2cap">BLE L2CAP</string>
@@ -118,8 +117,6 @@
     <string name="mode_phone_to_glasses_desc">Надіслати камеру телефону на дисплей окулярів</string>
     <string name="mode_glasses_to_phone">Окуляри на Телефон</string>
     <string name="mode_glasses_to_phone_desc">Надіслати камеру окулярів на дисплей телефону</string>
-    <string name="mode_bidirectional">Двонаправлений</string>
-    <string name="mode_bidirectional_desc">Одночасна двостороння трансляція</string>
     
     <!-- Transport Mode -->
     <string name="transport_mode_title">Режим передачі</string>

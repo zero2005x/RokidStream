@@ -15,6 +15,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -74,6 +75,10 @@ class GlassesScannerActivity : ComponentActivity() {
         private const val MAX_FRAME_SIZE = 1_000_000  // 1MB
         private const val DECODER_TIMEOUT_US = 1000L  // 1ms timeout for low latency
         
+        // Codec MIME types for H.265/H.264 support
+        private const val MIME_TYPE_HEVC = MediaFormat.MIMETYPE_VIDEO_HEVC  // "video/hevc"
+        private const val MIME_TYPE_AVC = MediaFormat.MIMETYPE_VIDEO_AVC    // "video/avc"
+        
         // Scan timeout in milliseconds
         private const val SCAN_TIMEOUT_MS = 30000L
         
@@ -105,6 +110,9 @@ class GlassesScannerActivity : ComponentActivity() {
     private var isStreaming = false
     private var framesReceived = 0
     private var framesDecoded = 0
+    
+    // Codec detection for H.265/H.264 auto-detection
+    private var detectedCodecType: String? = null  // Will be set from first frame
     
     // Glasses→Phone sending mode components
     private var videoEncoder: VideoEncoder? = null
@@ -140,6 +148,9 @@ class GlassesScannerActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Keep screen on to prevent Activity destruction during streaming
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         
         // Force portrait orientation for Rokid glasses
         // This ensures text top points upward on the glasses display
@@ -606,9 +617,8 @@ class GlassesScannerActivity : ComponentActivity() {
             else -> "Unknown"
         }
         val directionName = when (streamDirection.toInt()) {
-            1 -> "手機→眼鏡"
-            2 -> "眼鏡→手機"
-            3 -> "雙向"
+            1 -> "Phone→Glasses"
+            2 -> "Glasses→Phone"
             else -> "Unknown"
         }
         val langName = LocaleManager.getLanguageFromByteCode(languageCode).nativeName
@@ -665,11 +675,6 @@ class GlassesScannerActivity : ComponentActivity() {
                             startCameraAndSend()
                         }
                     }
-                    3 -> {
-                        // Bidirectional: Currently just receive (TODO: implement bidirectional)
-                        Log.d(TAG, "Mode: Bidirectional (receiving for now)")
-                        receiveVideoStream(socket.inputStream)
-                    }
                     else -> {
                         Log.w(TAG, "Unknown stream direction: $streamDirection, defaulting to receive")
                         receiveVideoStream(socket.inputStream)
@@ -703,28 +708,8 @@ class GlassesScannerActivity : ComponentActivity() {
             return
         }
         
-        // Initialize decoder with LOW LATENCY settings
-        try {
-            val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, VIDEO_WIDTH, VIDEO_HEIGHT)
-            
-            // Enable low latency mode (API 30+)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
-            }
-            
-            // Set realtime priority (API 23+)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                format.setInteger(MediaFormat.KEY_PRIORITY, 0)  // 0 = realtime
-            }
-            
-            videoDecoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            videoDecoder?.configure(format, videoSurface, null, 0)
-            videoDecoder?.start()
-            Log.d(TAG, "Video decoder started with low latency mode")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize decoder", e)
-            return
-        }
+        // Reset codec detection for new stream
+        detectedCodecType = null
         
         val headerBuffer = ByteArray(4)
         val frameBuffer = ByteArray(MAX_FRAME_SIZE)
@@ -781,6 +766,36 @@ class GlassesScannerActivity : ComponentActivity() {
                     Log.d(TAG, "📦 Frame #$framesReceived: $frameSize bytes, headerWait=${headerReadTime}ms, dataWait=${dataReadTime}ms")
                 }
                 
+                // Initialize decoder on first frame (auto-detect H.264/H.265)
+                if (videoDecoder == null) {
+                    try {
+                        val codecType = detectCodecType(frameBuffer, frameSize)
+                        detectedCodecType = codecType
+                        
+                        val format = MediaFormat.createVideoFormat(codecType, VIDEO_WIDTH, VIDEO_HEIGHT)
+                        
+                        // Enable low latency mode (API 30+)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                            format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
+                        }
+                        
+                        // Set realtime priority (API 23+)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                            format.setInteger(MediaFormat.KEY_PRIORITY, 0)  // 0 = realtime
+                        }
+                        
+                        videoDecoder = MediaCodec.createDecoderByType(codecType)
+                        videoDecoder?.configure(format, videoSurface, null, 0)
+                        videoDecoder?.start()
+                        
+                        val codecName = if (codecType == MIME_TYPE_HEVC) "H.265/HEVC" else "H.264/AVC"
+                        Log.d(TAG, "🎬 Video decoder started: $codecName with low latency mode")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to initialize decoder", e)
+                        break
+                    }
+                }
+                
                 // Calculate receive interval
                 val receiveTime = System.currentTimeMillis()
                 if (lastFrameReceiveTime > 0) {
@@ -830,28 +845,85 @@ class GlassesScannerActivity : ComponentActivity() {
     private var outputBufferMisses = 0
     
     /**
-     * Check if data contains H.264 codec config NAL units (SPS or PPS)
-     * NAL start code: 0x00 0x00 0x00 0x01
-     * NAL type is in lower 5 bits of byte after start code
-     * SPS = 7 (0x07, 0x27, 0x47, 0x67), PPS = 8 (0x08, 0x28, 0x48, 0x68)
+     * Detect codec type from NAL unit header.
+     * H.264: NAL type in bits 0-4 of first byte after start code
+     * H.265: NAL type in bits 1-6 of first byte after start code
+     * 
+     * H.264 SPS = 7, PPS = 8
+     * H.265 VPS = 32, SPS = 33, PPS = 34
+     */
+    private fun detectCodecType(data: ByteArray, size: Int): String {
+        if (size < 5) return MIME_TYPE_AVC  // Default to H.264
+        
+        // Find NAL header byte (after start code)
+        val nalHeaderByte: Int = when {
+            data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                data[2] == 0.toByte() && data[3] == 1.toByte() -> data[4].toInt() and 0xFF
+            data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                data[2] == 1.toByte() -> data[3].toInt() and 0xFF
+            else -> return MIME_TYPE_AVC
+        }
+        
+        // H.264: NAL type in bits 0-4 (& 0x1F)
+        val h264NalType = nalHeaderByte and 0x1F
+        
+        // H.265: NAL type in bits 1-6 (>> 1 & 0x3F)
+        val h265NalType = (nalHeaderByte shr 1) and 0x3F
+        
+        // Check for H.265 NAL types (VPS=32, SPS=33, PPS=34, IDR_W_RADL=19, IDR_N_LP=20, etc.)
+        if (h265NalType in 32..34 || h265NalType in 16..21) {
+            Log.d(TAG, "🔍 Detected H.265/HEVC stream (NAL type=$h265NalType)")
+            return MIME_TYPE_HEVC
+        }
+        
+        // Check for H.264 NAL types (SPS=7, PPS=8, IDR=5, non-IDR=1)
+        if (h264NalType in listOf(7, 8, 5, 1, 6, 9)) {
+            Log.d(TAG, "🔍 Detected H.264/AVC stream (NAL type=$h264NalType)")
+            return MIME_TYPE_AVC
+        }
+        
+        // Default to H.264
+        Log.d(TAG, "🔍 Unknown NAL type, defaulting to H.264/AVC")
+        return MIME_TYPE_AVC
+    }
+    
+    /**
+     * Check if data contains codec config NAL units (SPS/PPS for H.264, VPS/SPS/PPS for H.265)
+     * NAL start code: 0x00 0x00 0x00 0x01 or 0x00 0x00 0x01
      */
     private fun isCodecConfigNal(data: ByteArray): Boolean {
         if (data.size < 5) return false
         
-        // Check for 4-byte start code: 0x00 0x00 0x00 0x01
-        if (data[0] == 0.toByte() && data[1] == 0.toByte() && 
-            data[2] == 0.toByte() && data[3] == 1.toByte()) {
-            val nalType = data[4].toInt() and 0x1F
-            return nalType == 7 || nalType == 8  // SPS or PPS
+        // Find NAL header byte (after start code)
+        val nalHeaderByte: Int
+        val is4ByteStartCode: Boolean
+        
+        when {
+            data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                data[2] == 0.toByte() && data[3] == 1.toByte() -> {
+                nalHeaderByte = data[4].toInt() and 0xFF
+                is4ByteStartCode = true
+            }
+            data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                data[2] == 1.toByte() -> {
+                nalHeaderByte = data[3].toInt() and 0xFF
+                is4ByteStartCode = false
+            }
+            else -> return false
         }
         
-        // Check for 3-byte start code: 0x00 0x00 0x01
-        if (data[0] == 0.toByte() && data[1] == 0.toByte() && data[2] == 1.toByte()) {
-            val nalType = data[3].toInt() and 0x1F
-            return nalType == 7 || nalType == 8
-        }
+        // Check based on detected codec type
+        val isHevc = detectedCodecType == MIME_TYPE_HEVC
         
-        return false
+        return if (isHevc) {
+            // H.265: NAL type in bits 1-6
+            val nalType = (nalHeaderByte shr 1) and 0x3F
+            nalType == 32 || nalType == 33 || nalType == 34  // VPS, SPS, PPS
+        } else {
+            // H.264: NAL type in bits 0-4
+            val nalType = nalHeaderByte and 0x1F
+            nalType == 7 || nalType == 8  // SPS, PPS
+        }
     }
     
     private fun decodeFrame(data: ByteArray, size: Int) {
@@ -871,9 +943,7 @@ class GlassesScannerActivity : ComponentActivity() {
                 inputBuffer.clear()
                 inputBuffer.put(data, 0, size)
                 
-                // Detect codec config (SPS/PPS) by checking NAL unit type
-                // H.264 NAL start code: 0x00 0x00 0x00 0x01 followed by NAL header
-                // NAL type is in lower 5 bits: SPS=7 (0x67/0x27), PPS=8 (0x68/0x28)
+                // Detect codec config (SPS/PPS for H.264, VPS/SPS/PPS for H.265)
                 val isCodecConfig = size >= 5 && isCodecConfigNal(data)
                 val flags = if (isCodecConfig) {
                     // Log NAL header bytes for debugging
@@ -882,7 +952,8 @@ class GlassesScannerActivity : ComponentActivity() {
                     } else {
                         data.take(size).map { String.format("%02X", it) }.joinToString(" ")
                     }
-                    Log.d(TAG, "🔧 Detected codec config (SPS/PPS): $size bytes, header: $headerBytes")
+                    val codecName = if (detectedCodecType == MIME_TYPE_HEVC) "H.265" else "H.264"
+                    Log.d(TAG, "🔧 Detected codec config ($codecName): $size bytes, header: $headerBytes")
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG
                 } else {
                     // Log first frame's NAL type for debugging
@@ -892,24 +963,50 @@ class GlassesScannerActivity : ComponentActivity() {
                         } else {
                             data.take(size).map { String.format("%02X", it) }.joinToString(" ")
                         }
-                        // Determine NAL type
-                        val nalType = when {
-                            size >= 5 && data[0] == 0.toByte() && data[1] == 0.toByte() && 
-                                data[2] == 0.toByte() && data[3] == 1.toByte() -> data[4].toInt() and 0x1F
-                            size >= 4 && data[0] == 0.toByte() && data[1] == 0.toByte() && 
-                                data[2] == 1.toByte() -> data[3].toInt() and 0x1F
-                            else -> -1
+                        
+                        // Determine NAL type and name based on codec
+                        val isHevc = detectedCodecType == MIME_TYPE_HEVC
+                        val (nalType, nalTypeName) = if (isHevc) {
+                            val nal = when {
+                                size >= 5 && data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                                    data[2] == 0.toByte() && data[3] == 1.toByte() -> (data[4].toInt() shr 1) and 0x3F
+                                size >= 4 && data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                                    data[2] == 1.toByte() -> (data[3].toInt() shr 1) and 0x3F
+                                else -> -1
+                            }
+                            val name = when (nal) {
+                                19 -> "IDR_W_RADL (keyframe)"
+                                20 -> "IDR_N_LP (keyframe)"
+                                in 0..9 -> "Trail slice"
+                                32 -> "VPS"
+                                33 -> "SPS"
+                                34 -> "PPS"
+                                35 -> "AUD"
+                                39, 40 -> "SEI"
+                                else -> "Unknown"
+                            }
+                            Pair(nal, name)
+                        } else {
+                            val nal = when {
+                                size >= 5 && data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                                    data[2] == 0.toByte() && data[3] == 1.toByte() -> data[4].toInt() and 0x1F
+                                size >= 4 && data[0] == 0.toByte() && data[1] == 0.toByte() && 
+                                    data[2] == 1.toByte() -> data[3].toInt() and 0x1F
+                                else -> -1
+                            }
+                            val name = when (nal) {
+                                1 -> "Non-IDR slice"
+                                5 -> "IDR slice (keyframe)"
+                                6 -> "SEI"
+                                7 -> "SPS"
+                                8 -> "PPS"
+                                9 -> "AUD"
+                                else -> "Unknown"
+                            }
+                            Pair(nal, name)
                         }
-                        val nalTypeName = when (nalType) {
-                            1 -> "Non-IDR slice"
-                            5 -> "IDR slice (keyframe)"
-                            6 -> "SEI"
-                            7 -> "SPS"
-                            8 -> "PPS"
-                            9 -> "AUD"
-                            else -> "Unknown"
-                        }
-                        Log.d(TAG, "📹 Frame ${framesReceived}: $size bytes, NAL type=$nalType ($nalTypeName), header: $headerBytes")
+                        val codecName = if (isHevc) "H.265" else "H.264"
+                        Log.d(TAG, "📹 Frame ${framesReceived} ($codecName): $size bytes, NAL type=$nalType ($nalTypeName), header: $headerBytes")
                     }
                     0
                 }
@@ -984,25 +1081,20 @@ class GlassesScannerActivity : ComponentActivity() {
     
     // ==================== GLASSES→PHONE SENDING MODE ====================
     
+    // Camera2 API related fields
+    private var camera2Device: android.hardware.camera2.CameraDevice? = null
+    private var camera2Session: android.hardware.camera2.CameraCaptureSession? = null
+    private var imageReader: android.media.ImageReader? = null
+    private val camera2Handler = android.os.Handler(android.os.Looper.getMainLooper())
+    
     /**
      * Start camera capture and video encoding for Glasses→Phone mode
+     * Uses Camera2 API instead of CameraX for better compatibility with Rokid glasses
      */
+    @SuppressLint("MissingPermission")
     private fun startCameraAndSend() {
-        Log.d(TAG, "Starting camera for Glasses→Phone mode")
+        Log.d(TAG, "Starting camera for Glasses→Phone mode using Camera2 API")
         
-        // DISABLED: Rokid glasses don't have standard Android cameras
-        // CameraX can't detect Rokid's camera hardware correctly, causing:
-        // - "Expected camera missing from device" errors
-        // - Continuous retry loops consuming resources
-        // - App instability
-        //
-        // For now, Glasses→Phone mode is not supported on Rokid glasses.
-        // The glasses can only receive video from the phone.
-        Log.w(TAG, "⚠️ Camera capture disabled on Rokid glasses - camera hardware not compatible with CameraX")
-        Log.w(TAG, "⚠️ Glasses→Phone mode is not currently supported")
-        return
-        
-        /*
         // Check camera permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             != PackageManager.PERMISSION_GRANTED) {
@@ -1010,20 +1102,213 @@ class GlassesScannerActivity : ComponentActivity() {
             return
         }
         
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            try {
-                val cameraProvider = cameraProviderFuture.get()
-                bindCameraForSending(cameraProvider)
-            } catch (e: Exception) {
-                Log.e(TAG, "Camera init failed: ${e.message}")
+        // Use Camera2 API to enumerate and open cameras
+        val cameraManager = getSystemService(Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+        
+        try {
+            val cameraIds = cameraManager.cameraIdList
+            Log.d(TAG, "📷 Camera2 API found ${cameraIds.size} cameras: ${cameraIds.toList()}")
+            
+            if (cameraIds.isEmpty()) {
+                Log.e(TAG, "❌ No cameras found on this device")
+                return
             }
-        }, ContextCompat.getMainExecutor(this))
-        */
+            
+            // Log details for each camera
+            var selectedCameraId: String? = null
+            for (cameraId in cameraIds) {
+                val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+                val lensFacing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                val sensorOrientation = characteristics.get(android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION)
+                
+                val facingStr = when (lensFacing) {
+                    android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT -> "FRONT"
+                    android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK -> "BACK"
+                    android.hardware.camera2.CameraCharacteristics.LENS_FACING_EXTERNAL -> "EXTERNAL"
+                    else -> "UNKNOWN($lensFacing)"
+                }
+                Log.d(TAG, "📷 Camera $cameraId: facing=$facingStr, orientation=$sensorOrientation")
+                
+                // Get supported output sizes
+                val configs = characteristics.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                val sizes = configs?.getOutputSizes(android.graphics.ImageFormat.YUV_420_888)
+                Log.d(TAG, "📷 Camera $cameraId supports ${sizes?.size ?: 0} YUV_420_888 sizes")
+                sizes?.take(5)?.forEach { size ->
+                    Log.d(TAG, "   - ${size.width}x${size.height}")
+                }
+                
+                // Prefer front camera for glasses, otherwise use first available
+                if (selectedCameraId == null || lensFacing == android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT) {
+                    selectedCameraId = cameraId
+                }
+            }
+            
+            if (selectedCameraId == null) {
+                Log.e(TAG, "❌ No suitable camera found")
+                return
+            }
+            
+            Log.d(TAG, "📷 Selected camera: $selectedCameraId, opening...")
+            
+            // Create ImageReader for receiving frames
+            imageReader = android.media.ImageReader.newInstance(
+                VIDEO_WIDTH, VIDEO_HEIGHT,
+                android.graphics.ImageFormat.YUV_420_888,
+                2  // Max images
+            ).apply {
+                setOnImageAvailableListener({ reader ->
+                    val image = reader.acquireLatestImage()
+                    if (image != null) {
+                        processCamera2Frame(image)
+                        image.close()
+                    }
+                }, camera2Handler)
+            }
+            
+            // Open the camera
+            cameraManager.openCamera(selectedCameraId, object : android.hardware.camera2.CameraDevice.StateCallback() {
+                override fun onOpened(camera: android.hardware.camera2.CameraDevice) {
+                    Log.d(TAG, "📷 Camera opened successfully")
+                    camera2Device = camera
+                    createCamera2CaptureSession(camera)
+                }
+                
+                override fun onDisconnected(camera: android.hardware.camera2.CameraDevice) {
+                    Log.d(TAG, "📷 Camera disconnected")
+                    camera.close()
+                    camera2Device = null
+                }
+                
+                override fun onError(camera: android.hardware.camera2.CameraDevice, error: Int) {
+                    Log.e(TAG, "📷 Camera error: $error")
+                    camera.close()
+                    camera2Device = null
+                }
+            }, camera2Handler)
+            
+        } catch (e: android.hardware.camera2.CameraAccessException) {
+            Log.e(TAG, "❌ Camera access error: ${e.message}")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Camera init error: ${e.message}", e)
+        }
     }
     
     /**
-     * Bind camera use cases for video sending
+     * Create capture session for Camera2 API
+     */
+    private fun createCamera2CaptureSession(camera: android.hardware.camera2.CameraDevice) {
+        try {
+            val surfaces = listOf(imageReader!!.surface)
+            
+            camera.createCaptureSession(surfaces, object : android.hardware.camera2.CameraCaptureSession.StateCallback() {
+                override fun onConfigured(session: android.hardware.camera2.CameraCaptureSession) {
+                    Log.d(TAG, "📷 Capture session configured")
+                    camera2Session = session
+                    startCamera2Streaming(camera, session)
+                }
+                
+                override fun onConfigureFailed(session: android.hardware.camera2.CameraCaptureSession) {
+                    Log.e(TAG, "❌ Failed to configure capture session")
+                }
+            }, camera2Handler)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to create capture session: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Start streaming from Camera2 API
+     */
+    private fun startCamera2Streaming(camera: android.hardware.camera2.CameraDevice, session: android.hardware.camera2.CameraCaptureSession) {
+        try {
+            val captureRequest = camera.createCaptureRequest(android.hardware.camera2.CameraDevice.TEMPLATE_PREVIEW).apply {
+                addTarget(imageReader!!.surface)
+                set(android.hardware.camera2.CaptureRequest.CONTROL_MODE, android.hardware.camera2.CaptureRequest.CONTROL_MODE_AUTO)
+            }.build()
+            
+            session.setRepeatingRequest(captureRequest, null, camera2Handler)
+            Log.d(TAG, "📷 Camera2 streaming started")
+            
+            // Initialize encoder for sending
+            initEncoderForSending()
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to start Camera2 streaming: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Initialize video encoder for Glasses→Phone mode
+     */
+    private fun initEncoderForSending() {
+        val encoder = videoEncoder ?: VideoEncoder(VIDEO_WIDTH, VIDEO_HEIGHT).also { videoEncoder = it }
+        
+        if (encoder.isRunning) {
+            Log.d(TAG, "Encoder already running")
+            return
+        }
+        
+        encoder.start(VIDEO_WIDTH, VIDEO_HEIGHT)
+        Log.d(TAG, "Video encoder started for sending")
+        
+        // Start socket writer thread for Camera2 mode
+        Thread {
+            sendVideoFrames()  // Reuse existing sendVideoFrames method
+        }.start()
+    }
+    
+    /**
+     * Process a frame from Camera2 API
+     */
+    private fun processCamera2Frame(image: android.media.Image) {
+        if (!isStreaming) return
+        
+        try {
+            // Convert Image to YUV data and send to encoder
+            val yPlane = image.planes[0]
+            val uPlane = image.planes[1]
+            val vPlane = image.planes[2]
+            
+            val yBuffer = yPlane.buffer
+            val uBuffer = uPlane.buffer
+            val vBuffer = vPlane.buffer
+            
+            val ySize = yBuffer.remaining()
+            val uSize = uBuffer.remaining()
+            val vSize = vBuffer.remaining()
+            
+            val nv21 = ByteArray(ySize + uSize + vSize)
+            
+            // Copy Y plane
+            yBuffer.get(nv21, 0, ySize)
+            
+            // Copy UV planes (convert to NV21 if needed)
+            vBuffer.get(nv21, ySize, vSize)
+            uBuffer.get(nv21, ySize + vSize, uSize)
+            
+            // Queue frame to encoder
+            videoEncoder?.queueFrame(nv21)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error processing Camera2 frame: ${e.message}")
+        }
+    }
+    
+    /**
+     * Stop Camera2 resources
+     */
+    private fun stopCamera2() {
+        camera2Session?.close()
+        camera2Session = null
+        camera2Device?.close()
+        camera2Device = null
+        imageReader?.close()
+        imageReader = null
+        Log.d(TAG, "Camera2 resources released")
+    }
+    
+    /**
+     * Bind camera use cases for video sending (legacy CameraX method - kept for reference)
      * 
      * Note: Rokid glasses camera may not report standard LENS_FACING attribute,
      * so we use a custom CameraSelector that selects by camera ID instead.
@@ -1211,6 +1496,9 @@ class GlassesScannerActivity : ComponentActivity() {
         
         isStreaming = false
         
+        // Stop Camera2 resources
+        stopCamera2()
+        
         try {
             l2capSocket?.close()
         } catch (e: IOException) {
@@ -1236,6 +1524,7 @@ class GlassesScannerActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         isStreaming = false
+        stopCamera2()
         stopDecoder()
         stopEncoder()
         try {

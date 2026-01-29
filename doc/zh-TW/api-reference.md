@@ -350,7 +350,7 @@ com.rokid.stream.sender.streaming.ModeSelectionActivity
 
 #### 功能
 
-- 選擇串流方向（手機→眼鏡、眼鏡→手機、雙向）
+- 選擇串流方向（手機→眼鏡、眼鏡→手機）
 - 選擇傳輸模式（BLE L2CAP、WiFi TCP）
 - 權限請求處理
 - 導航至對應的串流 Activity
@@ -364,10 +364,6 @@ com.rokid.stream.sender.streaming.ModeSelectionActivity
 ### 4.3 GlassesToPhoneActivity
 
 眼鏡到手機單向串流 Activity。
-
-### 4.4 BidirectionalActivity
-
-雙向串流 Activity。
 
 ---
 
@@ -462,8 +458,7 @@ enum class ConnectionMode {
 ```kotlin
 enum class StreamDirection {
     PHONE_TO_GLASSES,   // 手機 → 眼鏡
-    GLASSES_TO_PHONE,   // 眼鏡 → 手機
-    BIDIRECTIONAL       // 雙向
+    GLASSES_TO_PHONE    // 眼鏡 → 手機
 }
 ```
 

@@ -350,7 +350,7 @@ com.rokid.stream.sender.streaming.ModeSelectionActivity
 
 #### Features
 
-- Select streaming direction (Phone → Glasses, Glasses → Phone, Bidirectional)
+- Select streaming direction (Phone → Glasses, Glasses → Phone)
 - Select transport mode (BLE L2CAP, WiFi TCP)
 - Permission request handling
 - Navigate to corresponding streaming Activity
@@ -364,10 +364,6 @@ Phone to glasses unidirectional streaming Activity.
 ### 4.3 GlassesToPhoneActivity
 
 Glasses to phone unidirectional streaming Activity.
-
-### 4.4 BidirectionalActivity
-
-Bidirectional streaming Activity.
 
 ---
 
@@ -462,8 +458,7 @@ enum class ConnectionMode {
 ```kotlin
 enum class StreamDirection {
     PHONE_TO_GLASSES,   // Phone → Glasses
-    GLASSES_TO_PHONE,   // Glasses → Phone
-    BIDIRECTIONAL       // Bidirectional
+    GLASSES_TO_PHONE    // Glasses → Phone
 }
 ```
 

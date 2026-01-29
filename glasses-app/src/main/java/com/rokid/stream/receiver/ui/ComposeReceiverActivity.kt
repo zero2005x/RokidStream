@@ -198,7 +198,6 @@ abstract class ComposeReceiverActivity : ComponentActivity() {
         return when (viewModel.uiState.value.selectedDirection) {
             StreamDirection.PHONE_TO_GLASSES -> true
             StreamDirection.GLASSES_TO_PHONE -> false
-            StreamDirection.BIDIRECTIONAL -> true
         }
     }
     
@@ -209,7 +208,6 @@ abstract class ComposeReceiverActivity : ComponentActivity() {
         return when (viewModel.uiState.value.selectedDirection) {
             StreamDirection.PHONE_TO_GLASSES -> false
             StreamDirection.GLASSES_TO_PHONE -> true
-            StreamDirection.BIDIRECTIONAL -> true
         }
     }
 }

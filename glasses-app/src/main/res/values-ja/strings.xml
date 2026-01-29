@@ -9,8 +9,7 @@
     <!-- Stream Direction -->
     <string name="direction_phone_to_glasses">スマホ → メガネ</string>
     <string name="direction_glasses_to_phone">メガネ → スマホ</string>
-    <string name="direction_bidirectional">双方向</string>
-    
+
     <!-- Connection Mode -->
     <string name="mode_l2cap">BLE L2CAP</string>
     <string name="mode_l2cap_desc">低遅延Bluetooth</string>

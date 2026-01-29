@@ -78,8 +78,7 @@ class BleAdvertiser(private val context: Context) {
     
     enum class StreamDirectionType(val value: Byte) {
         PHONE_TO_GLASSES(0x01),
-        GLASSES_TO_PHONE(0x02),
-        BIDIRECTIONAL(0x03)
+        GLASSES_TO_PHONE(0x02)
     }
     
     init {

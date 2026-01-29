@@ -9,7 +9,6 @@
     <!-- Stream Direction -->
     <string name="direction_phone_to_glasses">手机 → 眼镜</string>
     <string name="direction_glasses_to_phone">眼镜 → 手机</string>
-    <string name="direction_bidirectional">双向串流</string>
     
     <!-- Connection Mode -->
     <string name="mode_l2cap">BLE L2CAP</string>
@@ -117,8 +116,6 @@
     <string name="mode_phone_to_glasses_desc">手机相机画面传送到眼镜显示</string>
     <string name="mode_glasses_to_phone">眼镜传手机</string>
     <string name="mode_glasses_to_phone_desc">眼镜相机画面传送到手机显示</string>
-    <string name="mode_bidirectional">双向互传</string>
-    <string name="mode_bidirectional_desc">同时双向传输相机画面</string>
     
     <!-- Transport Mode -->
     <string name="transport_mode_title">传输模式</string>

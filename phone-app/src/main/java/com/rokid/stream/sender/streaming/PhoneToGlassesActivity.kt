@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -85,6 +86,9 @@ class PhoneToGlassesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_phone_to_glasses)
         
+        // Keep screen on during streaming
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        
         initViews()
         initComponents()
         setupCallbacks()
@@ -120,11 +124,11 @@ class PhoneToGlassesActivity : AppCompatActivity() {
     
     private fun setupCallbacks() {
         bleAdvertiser.onDeviceConnected = { device ->
-            log("眼鏡已連線: ${device.address}")
+            log("Glasses connected: ${device.address}")
         }
         
         bleAdvertiser.onDeviceDisconnected = { device ->
-            log("眼鏡已斷線: ${device.address}")
+            log("Glasses disconnected: ${device.address}")
             runOnUiThread {
                 stopStreaming()
             }
@@ -144,13 +148,13 @@ class PhoneToGlassesActivity : AppCompatActivity() {
                 updateConnectionStatus(true)
                 btnConnect.isEnabled = false
                 btnStop.isEnabled = true
-                log("L2CAP 連線成功，開始串流")
+                log("L2CAP connected, starting stream")
                 startCamera()
             }
         }
         
         bleAdvertiser.onL2capClientDisconnected = {
-            log("L2CAP 連線中斷")
+            log("L2CAP connection lost")
             runOnUiThread {
                 stopStreaming()
             }
@@ -159,22 +163,22 @@ class PhoneToGlassesActivity : AppCompatActivity() {
     
     private fun startAdvertising() {
         if (!bleAdvertiser.hasBluetoothPermissions()) {
-            log("缺少藍牙權限")
+            log("Missing Bluetooth permissions")
             return
         }
         
-        log("開始廣播 (UUID: 0000FFFF-...)，等待眼鏡連線...")
-        log("請確保眼鏡端正在掃描")
+        log("Starting advertising (UUID: 0000FFFF-...), waiting for glasses connection...")
+        log("Please ensure glasses are scanning")
         btnConnect.isEnabled = false
-        tvStatus.text = "廣播中..."
+        tvStatus.text = "Advertising..."
         
         val started = bleAdvertiser.startAdvertising()
         if (started) {
-            log("✓ 廣播啟動成功")
+            log("✓ Advertising started successfully")
         } else {
-            log("✗ 廣播啟動失敗")
+            log("✗ Failed to start advertising")
             btnConnect.isEnabled = true
-            tvStatus.text = "廣播失敗"
+            tvStatus.text = "Advertising failed"
         }
     }
     
@@ -299,6 +303,15 @@ class PhoneToGlassesActivity : AppCompatActivity() {
                 val now = System.currentTimeMillis()
                 if (now - lastLogTime >= 1000) {
                     Log.d(TAG, "Queued: $framesQueued, Dropped: $framesDropped, Queue size: ${writeQueue.size}")
+                    
+                    // If we've dropped too many consecutive frames, connection may be dead
+                    // Detect stalled connection: if socket writer hasn't consumed anything for 5+ seconds
+                    if (framesDropped > 50 && writeQueue.size >= 3) {
+                        Log.w(TAG, "⚠️ Connection appears stalled (${framesDropped} frames dropped), disconnecting...")
+                        runOnUiThread { stopStreaming() }
+                        break
+                    }
+                    
                     lastLogTime = now
                 }
             }
@@ -314,17 +327,36 @@ class PhoneToGlassesActivity : AppCompatActivity() {
         var totalBytesSent = 0L
         var lastLogTime = System.currentTimeMillis()
         var framesSentOverSocket = 0
+        var lastSuccessfulWriteTime = System.currentTimeMillis()
+        val writeTimeoutMs = 5000L  // 5 second timeout for stalled writes
         
         try {
             while (socketWriterRunning && isStreaming) {
                 // Wait for next packet (with timeout to check running flag)
-                val packet = writeQueue.poll(100, TimeUnit.MILLISECONDS) ?: continue
+                val packet = writeQueue.poll(100, TimeUnit.MILLISECONDS)
+                
+                if (packet == null) {
+                    // Check for write timeout (no successful writes for too long)
+                    if (System.currentTimeMillis() - lastSuccessfulWriteTime > writeTimeoutMs && framesSentOverSocket > 0) {
+                        Log.w(TAG, "⚠️ No successful writes for ${writeTimeoutMs}ms, connection may be dead")
+                    }
+                    continue
+                }
+                
                 val stream = bufferedOutputStream ?: break
                 
                 try {
+                    val writeStart = System.currentTimeMillis()
                     stream.write(packet)
                     stream.flush()  // Flush each packet for low latency
+                    val writeTime = System.currentTimeMillis() - writeStart
                     
+                    // Warn if write is slow (indicates buffer backup)
+                    if (writeTime > 500) {
+                        Log.w(TAG, "⚠️ Slow socket write: ${writeTime}ms")
+                    }
+                    
+                    lastSuccessfulWriteTime = System.currentTimeMillis()
                     framesSentOverSocket++
                     totalBytesSent += packet.size
                     
@@ -338,6 +370,10 @@ class PhoneToGlassesActivity : AppCompatActivity() {
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Socket write error: ${e.message}")
+                    runOnUiThread { 
+                        log("Connection lost: ${e.message}")
+                        stopStreaming() 
+                    }
                     break
                 }
             }
@@ -364,10 +400,10 @@ class PhoneToGlassesActivity : AppCompatActivity() {
     private fun updateConnectionStatus(connected: Boolean) {
         if (connected) {
             statusIndicator.setBackgroundColor(getColor(android.R.color.holo_green_dark))
-            tvStatus.text = "已連線"
+            tvStatus.text = "Connected"
         } else {
             statusIndicator.setBackgroundColor(getColor(android.R.color.holo_red_dark))
-            tvStatus.text = "未連線"
+            tvStatus.text = "Disconnected"
         }
     }
     

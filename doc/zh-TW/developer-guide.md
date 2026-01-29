@@ -78,8 +78,7 @@ phone-app/
 │   │   ├── streaming/
 │   │   │   ├── ModeSelectionActivity.kt   # ⭐ 主入口
 │   │   │   ├── PhoneToGlassesActivity.kt  # 手機→眼鏡串流
-│   │   │   ├── GlassesToPhoneActivity.kt  # 眼鏡→手機串流
-│   │   │   └── BidirectionalActivity.kt   # 雙向串流
+│   │   │   └── GlassesToPhoneActivity.kt  # 眼鏡→手機串流
 │   │   ├── core/
 │   │   │   ├── ConnectionManager.kt       # ⭐ BLE L2CAP 邏輯
 │   │   │   ├── VideoEncoder.kt            # ⭐ H.264 編碼

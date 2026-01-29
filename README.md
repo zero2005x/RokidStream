@@ -20,7 +20,7 @@
 
 ## Background & Purpose
 
-RokidStream enables **bidirectional real-time H.264 video streaming** between Android phones and Rokid AR glasses via BLE L2CAP or WiFi TCP. Designed for low-latency AR applications where phone camera feeds need to be displayed on glasses, or glasses camera feeds need to be viewed on phone.
+RokidStream enables **real-time H.264 video streaming** between Android phones and Rokid AR glasses via BLE L2CAP or WiFi TCP. Designed for low-latency AR applications where phone camera feeds need to be displayed on glasses, or glasses camera feeds need to be viewed on phone.
 
 ### Scope
 
@@ -221,8 +221,7 @@ Declared in `AndroidManifest.xml`:
 
 - [ ] BLE L2CAP: Phone → Glasses streaming
 - [ ] BLE L2CAP: Glasses → Phone streaming
-- [ ] BLE L2CAP: Bidirectional streaming
-- [ ] WiFi TCP: All three modes
+- [ ] WiFi TCP: Both modes
 - [ ] Reconnection after disconnect
 - [ ] App backgrounding/foregrounding
 - [ ] Permission denial handling

@@ -23,7 +23,6 @@ import com.rokid.stream.sender.util.LocaleManager
  * Users can select from:
  * - Phone to Glasses: Send phone camera to glasses display
  * - Glasses to Phone: Receive glasses camera on phone display
- * - Bidirectional: Both directions simultaneously
  * 
  * Also allows selection of transport mode:
  * - BLE L2CAP: Standard Bluetooth Low Energy
@@ -144,12 +143,6 @@ class ModeSelectionActivity : AppCompatActivity() {
         findViewById<androidx.cardview.widget.CardView>(R.id.card_glasses_to_phone)
             .setOnClickListener {
                 launchModeWithPermissionCheck(GlassesToPhoneActivity::class.java)
-            }
-        
-        // Bidirectional
-        findViewById<androidx.cardview.widget.CardView>(R.id.card_bidirectional)
-            .setOnClickListener {
-                launchModeWithPermissionCheck(BidirectionalActivity::class.java)
             }
         
         // Transport mode indicator (clickable to change mode)

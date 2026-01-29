@@ -9,10 +9,14 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 /**
- * VideoDecoder - Shared H.264 video decoder for all streaming modes
+ * VideoDecoder - H.265 (HEVC) / H.264 (AVC) video decoder for all streaming modes
  * 
  * Encapsulates MediaCodec decoder with low-latency optimizations.
- * Designed to be reused across GlassesToPhoneActivity and BidirectionalActivity.
+ * Designed to be reused across streaming Activities.
+ * 
+ * Features:
+ * - Auto-detects codec type from stream (VPS=H.265, SPS=H.264)
+ * - Low latency configuration for real-time streaming
  */
 class VideoDecoder(
     private val width: Int = DEFAULT_WIDTH,
@@ -21,8 +25,13 @@ class VideoDecoder(
     companion object {
         private const val TAG = "VideoDecoder"
         
-        const val DEFAULT_WIDTH = 720
-        const val DEFAULT_HEIGHT = 720
+        // MIME types
+        const val MIME_TYPE_HEVC = MediaFormat.MIMETYPE_VIDEO_HEVC  // "video/hevc"
+        const val MIME_TYPE_AVC = MediaFormat.MIMETYPE_VIDEO_AVC   // "video/avc"
+        
+        // Match glasses encoder resolution (240x240)
+        const val DEFAULT_WIDTH = 240
+        const val DEFAULT_HEIGHT = 240
         const val DECODER_TIMEOUT_US = 1000L  // 1ms for low latency
         const val MAX_FRAME_QUEUE = 10
     }
@@ -31,6 +40,11 @@ class VideoDecoder(
     @Volatile
     private var decoder: MediaCodec? = null
     private val decoderLock = Object()
+    
+    // Active codec type (detected from stream)
+    @Volatile
+    var activeCodec: String = MIME_TYPE_AVC
+        private set
     
     // Output surface for rendering
     @Volatile
@@ -44,7 +58,7 @@ class VideoDecoder(
     @Volatile
     private var isConfigured = false
     
-    // Codec configuration data (SPS/PPS)
+    // Codec configuration data (SPS/PPS for H.264, VPS/SPS/PPS for H.265)
     @Volatile
     var codecConfigData: ByteArray? = null
         private set
@@ -74,8 +88,46 @@ class VideoDecoder(
     }
     
     /**
+     * Detect codec type from config data
+     * H.265 starts with VPS (NAL type 32), H.264 starts with SPS (NAL type 7)
+     */
+    private fun detectCodecType(configData: ByteArray): String {
+        if (configData.size < 5) return MIME_TYPE_AVC
+        
+        // Find NAL start code
+        val startIndex = when {
+            configData.size > 4 && configData[0] == 0.toByte() && configData[1] == 0.toByte() &&
+                    configData[2] == 0.toByte() && configData[3] == 1.toByte() -> 4
+            configData.size > 3 && configData[0] == 0.toByte() && configData[1] == 0.toByte() &&
+                    configData[2] == 1.toByte() -> 3
+            else -> return MIME_TYPE_AVC
+        }
+        
+        if (startIndex >= configData.size) return MIME_TYPE_AVC
+        
+        val nalByte = configData[startIndex].toInt()
+        
+        // H.265: NAL type is bits 1-6, VPS=32, SPS=33, PPS=34
+        val hevcNalType = (nalByte shr 1) and 0x3F
+        if (hevcNalType in 32..34) {
+            Log.d(TAG, "🎬 Detected H.265 (HEVC) stream, NAL type=$hevcNalType")
+            return MIME_TYPE_HEVC
+        }
+        
+        // H.264: NAL type is bits 0-4, SPS=7, PPS=8
+        val avcNalType = nalByte and 0x1F
+        if (avcNalType == 7 || avcNalType == 8) {
+            Log.d(TAG, "🎬 Detected H.264 (AVC) stream, NAL type=$avcNalType")
+            return MIME_TYPE_AVC
+        }
+        
+        return MIME_TYPE_AVC
+    }
+    
+    /**
      * Initialize and start the decoder with codec config data
-     * @param configData SPS/PPS data for codec initialization
+     * @param configData SPS/PPS (H.264) or VPS/SPS/PPS (H.265) data for codec initialization.
+     *                   Can also be a keyframe with prepended codec config.
      * @return true if successful
      */
     fun start(configData: ByteArray? = null): Boolean {
@@ -91,16 +143,39 @@ class VideoDecoder(
                 return true
             }
             
+            // Extract pure codec config if the data includes IDR
+            val pureConfigData = if (configData != null && containsIdrSlice(configData)) {
+                val configEnd = findCodecConfigEnd(configData)
+                if (configEnd > 0 && configEnd < configData.size) {
+                    Log.d(TAG, "Extracting codec config from keyframe data (config: $configEnd bytes, total: ${configData.size} bytes)")
+                    configData.copyOfRange(0, configEnd)
+                } else {
+                    configData
+                }
+            } else {
+                configData
+            }
+            
+            // Detect codec type from config data
+            val mimeType = if (pureConfigData != null) {
+                detectCodecType(pureConfigData)
+            } else {
+                MIME_TYPE_AVC
+            }
+            activeCodec = mimeType
+            
             try {
-                Log.d(TAG, "Initializing H.264 decoder: ${width}x${height}")
+                val codecName = if (mimeType == MIME_TYPE_HEVC) "H.265 (HEVC)" else "H.264 (AVC)"
+                Log.d(TAG, "Initializing $codecName decoder: ${width}x${height}")
                 
-                val mediaDecoder = MediaCodec.createDecoderByType("video/avc")
-                val format = MediaFormat.createVideoFormat("video/avc", width, height)
+                val mediaDecoder = MediaCodec.createDecoderByType(mimeType)
+                val format = MediaFormat.createVideoFormat(mimeType, width, height)
                 
                 // Add codec config if provided
-                if (configData != null) {
-                    format.setByteBuffer("csd-0", ByteBuffer.wrap(configData))
-                    codecConfigData = configData.copyOf()
+                if (pureConfigData != null) {
+                    format.setByteBuffer("csd-0", ByteBuffer.wrap(pureConfigData))
+                    codecConfigData = pureConfigData.copyOf()
+                    Log.d(TAG, "Codec config size: ${pureConfigData.size} bytes")
                 }
                 
                 // === LOW LATENCY OPTIMIZATIONS ===
@@ -139,9 +214,20 @@ class VideoDecoder(
     fun queueFrame(frameData: ByteArray) {
         framesReceived++
         
-        // Check for codec config
-        if (isCodecConfig(frameData)) {
-            codecConfigData = frameData.copyOf()
+        // Check for codec config (including frames that start with config)
+        // Store codec config for decoder initialization
+        if (startsWithCodecConfig(frameData)) {
+            // Extract just the codec config portion if this includes IDR
+            if (containsIdrSlice(frameData)) {
+                // Frame contains config + IDR, extract config part
+                val configEnd = findCodecConfigEnd(frameData)
+                if (configEnd > 0 && configEnd < frameData.size) {
+                    codecConfigData = frameData.copyOfRange(0, configEnd)
+                }
+            } else {
+                // Pure codec config
+                codecConfigData = frameData.copyOf()
+            }
         }
         
         // Try to initialize decoder if not yet configured
@@ -154,6 +240,78 @@ class VideoDecoder(
             frameQueue.poll()
             frameQueue.offer(frameData)
         }
+    }
+    
+    /**
+     * Find the end position of codec config data (where IDR slice starts)
+     */
+    private fun findCodecConfigEnd(data: ByteArray): Int {
+        var i = 0
+        var lastConfigEnd = 0
+        
+        while (i < data.size - 4) {
+            // Look for NAL start code
+            if (data[i] == 0.toByte() && data[i + 1] == 0.toByte()) {
+                val startCodeLen: Int
+                val nalIndex: Int
+                
+                when {
+                    i + 3 < data.size && data[i + 2] == 0.toByte() && data[i + 3] == 1.toByte() -> {
+                        startCodeLen = 4
+                        nalIndex = i + 4
+                    }
+                    data[i + 2] == 1.toByte() -> {
+                        startCodeLen = 3
+                        nalIndex = i + 3
+                    }
+                    else -> {
+                        i++
+                        continue
+                    }
+                }
+                
+                if (nalIndex >= data.size) break
+                
+                val nalByte = data[nalIndex].toInt()
+                val hevcNalType = (nalByte shr 1) and 0x3F
+                
+                // If this is config NAL, update lastConfigEnd
+                if (hevcNalType in 32..34) {
+                    // Find next NAL start to determine end of this config NAL
+                    lastConfigEnd = findNextNalStart(data, nalIndex)
+                    if (lastConfigEnd < 0) lastConfigEnd = data.size
+                }
+                // If this is IDR, return the position before it
+                else if (hevcNalType in 16..21) {
+                    return i
+                }
+                
+                i += startCodeLen
+            } else {
+                i++
+            }
+        }
+        
+        return lastConfigEnd
+    }
+    
+    /**
+     * Find the start of the next NAL unit
+     */
+    private fun findNextNalStart(data: ByteArray, startFrom: Int): Int {
+        var i = startFrom
+        while (i < data.size - 3) {
+            if (data[i] == 0.toByte() && data[i + 1] == 0.toByte()) {
+                if (i + 3 < data.size && data[i + 2] == 0.toByte() && data[i + 3] == 1.toByte()) {
+                    return i
+                }
+                if (data[i + 2] == 1.toByte()) {
+                    return i
+                }
+            }
+            i++
+        }
+        return -1
     }
     
     /**
@@ -271,24 +429,132 @@ class VideoDecoder(
     }
     
     /**
-     * Check if frame data contains codec config (SPS/PPS)
+     * Check if frame data is PURE codec config (only VPS/SPS/PPS, no IDR slice)
+     * 
+     * This function returns true ONLY for pure codec config data, NOT for frames
+     * that have codec config prepended to them.
+     * 
+     * H.264: SPS (NAL type 7) or PPS (NAL type 8) only
+     * H.265: VPS (NAL type 32), SPS (NAL type 33), or PPS (NAL type 34) only
+     * 
+     * When codec config is prepended to a keyframe (e.g., VPS+SPS+PPS+IDR),
+     * this returns false because the decoder should process it as a normal frame.
      */
     fun isCodecConfig(data: ByteArray): Boolean {
         if (data.size < 5) return false
         
+        // Check first NAL unit type
+        val firstNalType = getFirstNalType(data)
+        if (firstNalType < 0) return false
+        
+        // Check if first NAL is codec config type
+        val isHevcConfig = firstNalType in 32..34
+        val isAvcConfig = firstNalType == 7 || firstNalType == 8
+        
+        if (!isHevcConfig && !isAvcConfig) return false
+        
+        // Now check if this is PURE codec config (no IDR frame after)
+        // If the data contains an IDR slice, it's a keyframe with prepended config
+        return !containsIdrSlice(data)
+    }
+    
+    /**
+     * Check if frame data starts with codec config (VPS/SPS/PPS)
+     * This is used to detect and store codec config for decoder initialization
+     */
+    fun startsWithCodecConfig(data: ByteArray): Boolean {
+        if (data.size < 5) return false
+        
+        val firstNalType = getFirstNalType(data)
+        if (firstNalType < 0) return false
+        
+        // Check if first NAL is codec config type
+        return firstNalType in 32..34 || firstNalType == 7 || firstNalType == 8
+    }
+    
+    /**
+     * Get the NAL unit type of the first NAL unit in the data
+     */
+    private fun getFirstNalType(data: ByteArray): Int {
         val startIndex = when {
             data.size > 4 && data[0] == 0.toByte() && data[1] == 0.toByte() &&
                     data[2] == 0.toByte() && data[3] == 1.toByte() -> 4
             data.size > 3 && data[0] == 0.toByte() && data[1] == 0.toByte() &&
                     data[2] == 1.toByte() -> 3
-            else -> 0
+            else -> return -1
         }
         
-        if (startIndex >= data.size) return false
+        if (startIndex >= data.size) return -1
         
-        val nalType = data[startIndex].toInt() and 0x1F
-        return nalType == 7 || nalType == 8  // SPS or PPS
+        val nalByte = data[startIndex].toInt()
+        
+        // Detect if this is HEVC or AVC based on common patterns
+        // For HEVC: NAL type is bits 1-6 of first byte
+        // For AVC: NAL type is bits 0-4 of first byte
+        val hevcNalType = (nalByte shr 1) and 0x3F
+        val avcNalType = nalByte and 0x1F
+        
+        // Heuristic: if HEVC NAL type makes sense (0-63 valid, common: 0-40), use HEVC
+        // VPS=32, SPS=33, PPS=34, IDR=19-20, P-frame=0-1
+        if (hevcNalType in 0..40) {
+            return hevcNalType
+        }
+        
+        return avcNalType
     }
+    
+    /**
+     * Check if the data contains an IDR slice (keyframe)
+     * This helps distinguish pure codec config from config+keyframe
+     */
+    private fun containsIdrSlice(data: ByteArray): Boolean {
+        var i = 0
+        while (i < data.size - 4) {
+            // Look for NAL start code
+            if (data[i] == 0.toByte() && data[i + 1] == 0.toByte()) {
+                val startCodeLen: Int
+                val nalIndex: Int
+                
+                when {
+                    i + 3 < data.size && data[i + 2] == 0.toByte() && data[i + 3] == 1.toByte() -> {
+                        startCodeLen = 4
+                        nalIndex = i + 4
+                    }
+                    data[i + 2] == 1.toByte() -> {
+                        startCodeLen = 3
+                        nalIndex = i + 3
+                    }
+                    else -> {
+                        i++
+                        continue
+                    }
+                }
+                
+                if (nalIndex >= data.size) break
+                
+                val nalByte = data[nalIndex].toInt()
+                
+                // Check for H.265 IDR (NAL types 16-21 = IRAP)
+                val hevcNalType = (nalByte shr 1) and 0x3F
+                if (hevcNalType in 16..21) return true
+                
+                // Check for H.264 IDR (NAL type 5)
+                val avcNalType = nalByte and 0x1F
+                if (avcNalType == 5) return true
+                
+                i += startCodeLen
+            } else {
+                i++
+            }
+        }
+        
+        return false
+    }
+    
+    /**
+     * Check if currently using H.265 (HEVC) codec
+     */
+    fun isUsingHevc(): Boolean = activeCodec == MIME_TYPE_HEVC
     
     /**
      * Get decode statistics

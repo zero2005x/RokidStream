@@ -4,7 +4,7 @@ This document provides a detailed description of the RokidStream project's syste
 
 ## 1. System Overview
 
-RokidStream is a real-time video streaming system between smartphones and Rokid AR glasses, using a client-server architecture with bidirectional video transmission support.
+RokidStream is a real-time video streaming system between smartphones and Rokid AR glasses, using a client-server architecture for video transmission.
 
 ```
 ┌─────────────────────┐         ┌─────────────────────┐
@@ -44,8 +44,7 @@ phone-app/
     ├── streaming/
     │   ├── ModeSelectionActivity.kt # Mode selection main page
     │   ├── PhoneToGlassesActivity.kt# Phone→Glasses streaming
-    │   ├── GlassesToPhoneActivity.kt# Glasses→Phone streaming
-    │   └── BidirectionalActivity.kt # Bidirectional streaming
+    │   └── GlassesToPhoneActivity.kt# Glasses→Phone streaming
     ├── ui/
     │   ├── SettingsActivity.kt      # Settings page
     │   ├── LanguageSelectionActivity.kt # Language selection
@@ -157,7 +156,7 @@ WiFi TCP streaming manager supporting:
 
 - mDNS/NSD service discovery
 - TCP Socket connections
-- Bidirectional data transmission
+- Data transmission
 
 ```kotlin
 class WiFiStreamManager(private val context: Context) {
@@ -207,10 +206,6 @@ Rokid CXR-M SDK wrapper providing:
                    Glasses                          Phone
 ```
 
-### 4.3 Bidirectional Streaming
-
-Executes both modes simultaneously using two independent L2CAP channels or TCP connections.
-
 ## 5. UI Architecture
 
 The project uses a hybrid architecture of Jetpack Compose and traditional Views:
@@ -221,7 +216,6 @@ The project uses a hybrid architecture of Jetpack Compose and traditional Views:
 ModeSelectionActivity (Main entry)
     ├── PhoneToGlassesActivity
     ├── GlassesToPhoneActivity
-    ├── BidirectionalActivity
     └── SettingsActivity
         └── LanguageSelectionActivity
 ```
@@ -281,6 +275,5 @@ ModeSelectionActivity (Main entry)
 
 1. **Modularity**: Core components are reusable across Activities
 2. **Low Latency**: Encoding parameters optimized for real-time streaming
-3. **Bidirectional Support**: Architecture designed for two-way video
-4. **Multiple Transports**: Abstracted transport layer supporting BLE and WiFi
-5. **Reactive UI**: MVVM implementation using Compose and ViewModel
+3. **Multiple Transports**: Abstracted transport layer supporting BLE and WiFi
+4. **Reactive UI**: MVVM implementation using Compose and ViewModel

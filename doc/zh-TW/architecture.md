@@ -4,7 +4,7 @@
 
 ## 1. 系統總覽
 
-RokidStream 是一套手機與 Rokid AR 眼鏡之間的即時視訊串流系統，採用客戶端-伺服器架構，支援雙向視訊傳輸。
+RokidStream 是一套手機與 Rokid AR 眼鏡之間的即時視訊串流系統，採用客戶端-伺服器架構。
 
 ```
 ┌─────────────────────┐         ┌─────────────────────┐
@@ -44,8 +44,7 @@ phone-app/
     ├── streaming/
     │   ├── ModeSelectionActivity.kt # 模式選擇主頁
     │   ├── PhoneToGlassesActivity.kt# 手機→眼鏡串流
-    │   ├── GlassesToPhoneActivity.kt# 眼鏡→手機串流
-    │   └── BidirectionalActivity.kt # 雙向串流
+    │   └── GlassesToPhoneActivity.kt# 眼鏡→手機串流
     ├── ui/
     │   ├── SettingsActivity.kt      # 設定頁面
     │   ├── LanguageSelectionActivity.kt # 語言選擇
@@ -157,7 +156,7 @@ WiFi TCP 串流管理器，支援：
 
 - mDNS/NSD 服務發現
 - TCP Socket 連線
-- 雙向資料傳輸
+- 資料傳輸
 
 ```kotlin
 class WiFiStreamManager(private val context: Context) {
@@ -207,10 +206,6 @@ Rokid CXR-M SDK 封裝層，提供：
                    Glasses                          Phone
 ```
 
-### 4.3 雙向串流 (Bidirectional)
-
-同時執行上述兩種模式，使用兩個獨立的 L2CAP 通道或 TCP 連線。
-
 ## 5. UI 架構
 
 專案採用 Jetpack Compose 與傳統 View 混合架構：
@@ -221,7 +216,6 @@ Rokid CXR-M SDK 封裝層，提供：
 ModeSelectionActivity (主入口)
     ├── PhoneToGlassesActivity
     ├── GlassesToPhoneActivity
-    ├── BidirectionalActivity
     └── SettingsActivity
         └── LanguageSelectionActivity
 ```
@@ -281,6 +275,5 @@ ModeSelectionActivity (主入口)
 
 1. **模組化**：核心元件可跨 Activity 重用
 2. **低延遲**：編碼參數針對即時串流最佳化
-3. **雙向支援**：架構設計支援雙向視訊傳輸
-4. **多傳輸層**：抽象化傳輸層，支援 BLE 與 WiFi
-5. **響應式 UI**：使用 Compose 與 ViewModel 實現 MVVM
+3. **多傳輸層**：抽象化傳輸層，支援 BLE 與 WiFi
+4. **響應式 UI**：使用 Compose 與 ViewModel 實現 MVVM

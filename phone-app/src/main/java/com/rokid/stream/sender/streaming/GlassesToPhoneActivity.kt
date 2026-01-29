@@ -8,6 +8,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -77,6 +78,9 @@ class GlassesToPhoneActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_glasses_to_phone)
         
+        // Keep screen on during streaming
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        
         initViews()
         initComponents()
         setupCallbacks()
@@ -117,11 +121,11 @@ class GlassesToPhoneActivity : AppCompatActivity() {
     private fun setupCallbacks() {
         // When a device (glasses) connects via GATT
         bleAdvertiser.onDeviceConnected = { device ->
-            log("眼鏡已連接: ${device.name ?: device.address}")
+            log("Glasses connected: ${device.name ?: device.address}")
         }
         
         bleAdvertiser.onDeviceDisconnected = { device ->
-            log("眼鏡已斷開: ${device.name ?: device.address}")
+            log("Glasses disconnected: ${device.name ?: device.address}")
             // Update state and UI, don't call stopReceiving() to avoid recursion
             isReceiving = false
             inputStream = null
@@ -135,7 +139,7 @@ class GlassesToPhoneActivity : AppCompatActivity() {
         
         // When glasses connect via L2CAP and send data
         bleAdvertiser.onL2capClientConnected = { _, inStream ->
-            log("L2CAP 連線建立，開始接收視訊...")
+            log("L2CAP connected, starting to receive video...")
             inputStream = inStream
             isReceiving = true
             
@@ -150,7 +154,7 @@ class GlassesToPhoneActivity : AppCompatActivity() {
         }
         
         bleAdvertiser.onL2capClientDisconnected = {
-            log("L2CAP 連線已斷開")
+            log("L2CAP connection lost")
             // Only update UI and state, don't call stopReceiving() to avoid recursion
             isReceiving = false
             inputStream = null
@@ -196,22 +200,22 @@ class GlassesToPhoneActivity : AppCompatActivity() {
     private fun startAdvertising() {
         // Check permissions
         if (!bleAdvertiser.hasBluetoothPermissions()) {
-            log("缺少藍牙權限")
+            log("Missing Bluetooth permissions")
             return
         }
         
-        log("開始廣播 (UUID: 0000FFFF-...)，等待眼鏡連線...")
-        log("請確保眼鏡端正在掃描")
+        log("Starting advertising (UUID: 0000FFFF-...), waiting for glasses connection...")
+        log("Please ensure glasses are scanning")
         btnConnect.isEnabled = false
-        tvStatus.text = "廣播中..."
+        tvStatus.text = "Advertising..."
         
         val started = bleAdvertiser.startAdvertising()
         if (started) {
-            log("✓ 廣播啟動成功，等待眼鏡掃描...")
+            log("✓ Advertising started successfully, waiting for glasses to scan...")
         } else {
-            log("✗ 廣播啟動失敗")
+            log("✗ Failed to start advertising")
             btnConnect.isEnabled = true
-            tvStatus.text = "廣播失敗"
+            tvStatus.text = "Advertising failed"
         }
     }
     
@@ -278,7 +282,8 @@ class GlassesToPhoneActivity : AppCompatActivity() {
                 framesReceived++
                 
                 // Initialize decoder if needed
-                if (!videoDecoder.isRunning && videoDecoder.isCodecConfig(frameData)) {
+                // Use startsWithCodecConfig to detect frames that can initialize the decoder
+                if (!videoDecoder.isRunning && videoDecoder.startsWithCodecConfig(frameData)) {
                     videoDecoder.start(frameData)
                     runOnUiThread {
                         waitingOverlay.visibility = View.GONE
@@ -316,10 +321,10 @@ class GlassesToPhoneActivity : AppCompatActivity() {
     private fun updateConnectionStatus(connected: Boolean) {
         if (connected) {
             statusIndicator.setBackgroundColor(getColor(android.R.color.holo_green_dark))
-            tvStatus.text = "已連線"
+            tvStatus.text = "Connected"
         } else {
             statusIndicator.setBackgroundColor(getColor(android.R.color.holo_red_dark))
-            tvStatus.text = "未連線"
+            tvStatus.text = "Disconnected"
         }
     }
     
